@@ -33,13 +33,23 @@ This solution provides **personalized, deterministic guidance** tailored to loca
 Generative AI must **explain, contextualize, and personalize** advice, but it must **never invent or hallucinate unsafe medical recommendations**. 
 All baseline recommendations and risk thresholds in BreatheSafe are calculated by a pure, deterministic engine (`src/domain/recommendationEngine.ts`) with zero stochastic drift. Future GenAI extensions consume this deterministic output as a hard constraint.
 
-### 2.2 Provider Abstraction & Safe Fallback
+### 2.2 Provider Abstraction, Live Data & Safe Fallback
 Environmental data (air quality and meteorological snapshots) is mediated via interfaces:
 - `IAirQualityProvider`
 - `IWeatherProvider`
 - `IEnvironmentService`
 
-If live telemetry fails or coordinates have no sensor coverage, the system gracefully shifts into a **Conservative Safety Baseline** (`isStaleOrFallback: true`) rather than crashing or showing blank screens. Users can also simulate sensor outages with a single toggle.
+The default dashboard connects to the no-key Open-Meteo Weather and Air Quality APIs using the selected location's coordinates. The UI shows whether the current plan is **live**, **mixed live + fallback**, or a **conservative fallback**. The app never presents a failed network request as live telemetry.
+
+If live telemetry fails or coordinates have no coverage, the system gracefully shifts into a **Conservative Safety Baseline** (`isStaleOrFallback: true`) rather than crashing or showing blank screens. Users can also simulate sensor outages from the reliability test controls. Live data is attributed in the UI to Open-Meteo and the CAMS ENSEMBLE air-quality forecast.
+
+### 2.3 Real-world usage flow
+
+1. Choose the nearest city or basin from **Target location**.
+2. Set the resident or household profile: sensitivity, commute, heating, purifier, and respirator access.
+3. Read the current AQI/weather card, then start with the first three action cards: outdoor exposure, commute, and indoor air.
+4. Ask the assistant to explain a decision; it can only explain and personalize the deterministic plan.
+5. If a provider is unavailable, continue with the labelled conservative plan and verify local public-health advisories.
 
 ---
 
@@ -64,14 +74,18 @@ urban-air-quality-assistant/
 │   ├── services/                # Provider abstraction layer & data sources
 │   │   ├── types.ts             # IAirQualityProvider, IWeatherProvider, IEnvironmentService
 │   │   ├── mockData.ts          # Realistic winter smog scenarios & fallback baseline
-│   │   ├── MockAirQualityProvider.ts
-│   │   ├── MockWeatherProvider.ts
+│   │   ├── OpenMeteoAirQualityProvider.ts # Live no-key air-quality provider
+│   │   ├── OpenMeteoWeatherProvider.ts   # Live no-key weather provider
+│   │   ├── liveUtils.ts                  # Provider normalization and heuristics
+│   │   ├── MockAirQualityProvider.ts     # Fallback/scenario provider
+│   │   ├── MockWeatherProvider.ts        # Fallback/scenario provider
 │   │   ├── EnvironmentService.ts# Unified coordinator with error recovery
 │   │   └── AssistantService.ts  # Remote endpoint boundary with deterministic fallback
 │   ├── components/              # Accessible, semantic UI components
 │   │   ├── Header.tsx           # Application header with challenge branding
 │   │   ├── MedicalDisclaimer.tsx# Prominent non-medical advisory callout
-│   │   ├── FallbackBanner.tsx   # Telemetry status and outage simulation toggle
+│   │   ├── FallbackBanner.tsx   # Live/fallback status and reliability test toggle
+│   │   ├── HowToUseCard.tsx     # First-use workflow and onboarding
 │   │   ├── LocationSelector.tsx # Dropdown for urban locations and topography
 │   │   ├── UserProfileEditor.tsx# Accessible form for age, asthma/COPD, commute, heating
 │   │   ├── EnvironmentalCard.tsx# AQI display, pollutant breakdown, and inversion alerts
@@ -159,6 +173,10 @@ Runs the unit suite validating deterministic safety rules, vulnerability escalat
 npm run build
 ```
 Generates a type-checked, optimized production bundle in `dist/`.
+
+### Live data attribution
+
+The app uses the public [Open-Meteo Weather API](https://open-meteo.com/en/docs) and [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api). Air-quality forecasts are based on the CAMS ENSEMBLE product. The live source and fallback state are visible in the environmental snapshot and footer.
 
 ### Deploying to Vercel
 ```bash

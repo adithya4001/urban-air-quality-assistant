@@ -1,17 +1,21 @@
 import React from 'react';
-import { AirQualitySnapshot, RiskLevel, WeatherSnapshot } from '../domain/types';
+import { AirQualitySnapshot, DataSource, RiskLevel, WeatherSnapshot } from '../domain/types';
 import { formatAqi, formatConcentration, getRiskLevelColor, getRiskLevelLabel } from '../utils/formatters';
 
 interface EnvironmentalCardProps {
   airQuality: AirQualitySnapshot;
   weather: WeatherSnapshot;
   effectiveRisk: RiskLevel;
+  dataSource?: DataSource;
+  dataAttribution?: string;
 }
 
 export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
   airQuality,
   weather,
   effectiveRisk,
+  dataSource = 'scenario',
+  dataAttribution,
 }) => {
   const riskColor = getRiskLevelColor(effectiveRisk);
 
@@ -20,11 +24,15 @@ export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
       <div className="card-header">
         <div>
           <h2 className="card-title">3. Environmental Snapshot & Inversion Dynamics</h2>
-          <p className="muted-note" style={{ marginTop: '4px' }}>Scenario data is clearly labelled until a verified live provider is connected.</p>
+          <p className="muted-note" style={{ marginTop: '4px' }}>
+            {dataSource === 'live'
+              ? 'Live conditions shape this plan; recommendations still follow deterministic safety rules.'
+              : 'Every unavailable signal is labelled and replaced with a conservative planning baseline.'}
+          </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <span className="data-source-badge">
-          <span className="status-dot" aria-hidden="true" /> {airQuality.isStaleOrFallback ? 'Conservative fallback' : 'Scenario snapshot'}
+          <span className="data-source-badge">
+          <span className="status-dot" aria-hidden="true" /> {dataSource === 'live' ? 'Live conditions' : dataSource === 'mixed' ? 'Mixed live + fallback' : dataSource === 'fallback' ? 'Safety fallback' : 'Scenario snapshot'}
         </span>
         <span
           className="badge"
@@ -169,6 +177,7 @@ export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
           </div>
         )}
       </div>
+      {dataAttribution && <p className="source-note" aria-label="Environmental data source">{dataAttribution}</p>}
     </div>
   );
 };

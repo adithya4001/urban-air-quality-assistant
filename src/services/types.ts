@@ -1,4 +1,4 @@
-import { AirQualitySnapshot, Location, WeatherSnapshot } from '../domain/types';
+import { AirQualitySnapshot, DataSource, Location, WeatherSnapshot } from '../domain/types';
 
 export interface IAirQualityProvider {
   readonly providerName: string;
@@ -15,6 +15,8 @@ export interface EnvironmentalContextResult {
   weather: WeatherSnapshot;
   isFallback: boolean;
   fallbackReason?: string;
+  dataSource: DataSource;
+  dataAttribution?: string;
 }
 
 export interface IEnvironmentService {

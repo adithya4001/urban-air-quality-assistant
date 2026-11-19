@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AssistantPanel } from '../components/AssistantPanel';
 import { EnvironmentalCard } from '../components/EnvironmentalCard';
 import { FallbackBanner } from '../components/FallbackBanner';
+import { HowToUseCard } from '../components/HowToUseCard';
 import { LocationSelector } from '../components/LocationSelector';
 import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
 import { RecommendationCard } from '../components/RecommendationCard';
@@ -10,9 +11,9 @@ import { AssistantContext } from '../domain/assistant';
 import { generateDailyPlan } from '../domain/recommendationEngine';
 import { DailyPlan, Location, RecommendationCategory, UserProfile } from '../domain/types';
 import { EnvironmentService } from '../services/EnvironmentService';
-import { MockAirQualityProvider } from '../services/MockAirQualityProvider';
-import { MockWeatherProvider } from '../services/MockWeatherProvider';
 import { MOCK_LOCATIONS } from '../services/mockData';
+import { OpenMeteoAirQualityProvider } from '../services/OpenMeteoAirQualityProvider';
+import { OpenMeteoWeatherProvider } from '../services/OpenMeteoWeatherProvider';
 import { getRiskLevelLabel } from '../utils/formatters';
 
 const LOCATION_STORAGE_KEY = 'breathesafe.location';
@@ -65,8 +66,8 @@ function persist(key: string, value: unknown) {
 export const DashboardPage: React.FC = () => {
   const environmentService = useMemo(
     () => new EnvironmentService(
-      new MockAirQualityProvider({ simulateDelayMs: 80 }),
-      new MockWeatherProvider({ simulateDelayMs: 80 }),
+      new OpenMeteoAirQualityProvider(),
+      new OpenMeteoWeatherProvider(),
     ),
     [],
   );
@@ -98,6 +99,8 @@ export const DashboardPage: React.FC = () => {
           context.weather,
           context.isFallback,
           context.fallbackReason,
+          context.dataSource,
+          context.dataAttribution,
         ));
         setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       } catch {
@@ -134,7 +137,7 @@ export const DashboardPage: React.FC = () => {
             lower exposure, and lower-emission routines.
           </p>
           <div className="hero-meta" aria-label="Current plan summary">
-            <span className="status-pill"><span className="status-dot" aria-hidden="true" /> Safety-first plan</span>
+            <span className="status-pill"><span className="status-dot" aria-hidden="true" /> {dailyPlan?.dataSource === 'live' ? 'Live conditions' : 'Safety-first plan'}</span>
             <span>{selectedLocation.city}, {selectedLocation.country}</span>
             <span>{lastUpdated ? `Updated ${lastUpdated}` : 'Loading conditions'}</span>
           </div>
@@ -148,7 +151,9 @@ export const DashboardPage: React.FC = () => {
 
       <MedicalDisclaimer />
 
-      <div className="toolbar-row">
+      <HowToUseCard onJumpToControls={() => document.getElementById('control-room')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+
+      <div id="control-room" className="toolbar-row">
         <div>
           <p className="eyebrow">YOUR CONTROL ROOM</p>
           <h2 className="section-title">Today’s breathable-air plan</h2>
@@ -180,7 +185,7 @@ export const DashboardPage: React.FC = () => {
               <li>Air-quality and weather snapshot</li>
               <li>Resident sensitivities and routine</li>
             </ul>
-            <p className="muted-note">Live providers can be connected later through the typed service interfaces. Until then, the app labels mock and fallback data clearly.</p>
+            <p className="muted-note">Live weather and air-quality forecasts are used when available. If a signal fails, the plan stays usable and labels the fallback instead of silently pretending it is live.</p>
           </div>
         </aside>
 
@@ -192,7 +197,13 @@ export const DashboardPage: React.FC = () => {
             </div>
           ) : dailyPlan ? (
             <>
-              <EnvironmentalCard airQuality={dailyPlan.airQuality} weather={dailyPlan.weather} effectiveRisk={dailyPlan.overallRisk} />
+              <EnvironmentalCard
+                airQuality={dailyPlan.airQuality}
+                weather={dailyPlan.weather}
+                effectiveRisk={dailyPlan.overallRisk}
+                dataSource={dailyPlan.dataSource}
+                dataAttribution={dailyPlan.dataAttribution}
+              />
 
               <div className="plan-strip" aria-label="Plan priorities">
                 <div><span className="plan-index">01</span><strong>Protect sensitive people</strong><span>Use the most cautious household plan.</span></div>
@@ -232,6 +243,7 @@ export const DashboardPage: React.FC = () => {
 
       <footer className="app-footer" role="contentinfo">
         <p><strong>BreatheSafe</strong> · PromptWars Virtual Challenge 6 · Urban Air Quality Assistant</p>
+        <p>Live environmental data: Open-Meteo weather and CAMS ENSEMBLE air-quality forecast, with labelled fallback when unavailable.</p>
         <p>General environmental guidance only. Verify live data, local advisories, and clinician instructions before acting.</p>
       </footer>
     </main>

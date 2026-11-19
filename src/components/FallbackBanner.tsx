@@ -58,30 +58,25 @@ export const FallbackBanner: React.FC<FallbackBannerProps> = ({
         </div>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          gap: '10px',
-          fontSize: '0.85rem',
-          color: 'var(--color-text-muted)',
-        }}
-      >
-        <label
-          htmlFor="toggle-fallback"
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
+      {!isFallback && (
+        <div className="live-status-banner" role="status" aria-live="polite">
+          <span className="status-dot" aria-hidden="true" />
+          <span><strong>Live conditions connected.</strong> Change the location or resident profile to recalculate the plan.</span>
+        </div>
+      )}
+
+      <details className="reliability-tools">
+        <summary>Reliability test controls</summary>
+        <label htmlFor="toggle-fallback">
           <input
             id="toggle-fallback"
             type="checkbox"
             checked={isForced}
             onChange={(e) => onToggleForceFallback(e.target.checked)}
-            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
           />
-          <span>Simulate Sensor / Telemetry Outage (Test Fallback Engine)</span>
+          <span>Simulate an outage to verify the safe fallback plan</span>
         </label>
-      </div>
+      </details>
     </div>
   );
 };

@@ -11,6 +11,8 @@ export type RiskLevel =
   | 'very_unhealthy'       // AQI 201-300 (Very Unhealthy)
   | 'hazardous';           // AQI 301+ (Hazardous / Severe Winter Smog)
 
+export type DataSource = 'live' | 'mixed' | 'scenario' | 'fallback';
+
 export type PrimaryPollutant = 'PM2.5' | 'PM10' | 'NO2' | 'O3' | 'CO' | 'SO2';
 
 export interface Location {
@@ -113,5 +115,7 @@ export interface DailyPlan {
   recommendations: Recommendation[];
   fallbackActive: boolean;
   fallbackReason?: string;
+  dataSource?: DataSource;
+  dataAttribution?: string;
   generatedAt: string;
 }

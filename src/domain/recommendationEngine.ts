@@ -1,5 +1,6 @@
 import {
   AirQualitySnapshot,
+  DataSource,
   DailyPlan,
   HealthCondition,
   Location,
@@ -371,7 +372,9 @@ export function generateDailyPlan(
   aqiSnapshot: AirQualitySnapshot,
   weather: WeatherSnapshot,
   fallbackActive = false,
-  fallbackReason?: string
+  fallbackReason?: string,
+  dataSource: DataSource = fallbackActive ? 'fallback' : 'scenario',
+  dataAttribution?: string,
 ): DailyPlan {
   const effectiveRisk = calculateEffectiveRiskLevel(aqiSnapshot, profile);
 
@@ -393,6 +396,8 @@ export function generateDailyPlan(
     recommendations,
     fallbackActive,
     fallbackReason,
+    dataSource,
+    dataAttribution,
     generatedAt: new Date().toISOString(),
   };
 }
