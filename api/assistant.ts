@@ -1,4 +1,4 @@
-import { AssistantContext, AssistantReply, buildAssistantReply } from '../src/domain/assistant';
+import type { AssistantContext, AssistantReply, AssistantIntent } from '../src/domain/assistant';
 
 const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 
@@ -35,6 +35,60 @@ function isExplanation(value: unknown): value is Pick<AssistantReply, 'answer' |
     && typeof candidate.whyItMatters === 'string'
     && candidate.whyItMatters.length > 0
     && candidate.whyItMatters.length <= 900;
+}
+
+function classifyIntent(question: string): AssistantIntent {
+  const normalized = question.toLowerCase();
+  if (/indoor|home|room|purifier|window/.test(normalized)) return 'indoor';
+  if (/commute|travel|office|school|walk|cycle/.test(normalized)) return 'commute';
+  if (/child|children|family|elder|baby|pregnan/.test(normalized)) return 'family';
+  if (/impact|why|co2|environment|pollution/.test(normalized)) return 'impact';
+  if (/outside|outdoor|exercise|run|mask/.test(normalized)) return 'outdoor';
+  return 'today';
+}
+
+function deterministicReply(question: string, context: AssistantContext): AssistantReply {
+  const intent = classifyIntent(question);
+  const recommendationFor = (category: string) => context.plan.recommendations.find((item) => item.category === category);
+  const recommendation = recommendationFor(
+    intent === 'indoor' ? 'indoor_air'
+      : intent === 'commute' ? 'commute'
+        : intent === 'impact' ? 'emission_reduction'
+          : 'outdoor_activity',
+  );
+  const sensitive = context.profile.ageGroup !== 'teen_adult'
+    || context.profile.healthConditions.some((condition) => condition !== 'none');
+  const safetyNote = sensitive
+    ? 'Use the cautious option for this profile and follow the person’s clinician guidance. This assistant does not diagnose or change treatment.'
+    : 'If breathing difficulty, chest pain, confusion, or severe symptoms occur, move to cleaner air and seek urgent local medical help.';
+  const actions = recommendation?.actionItems.slice(0, 4)
+    ?? ['Protect indoor air during peak smog.', 'Reduce unnecessary outdoor exposure.', 'Choose a lower-emission practical routine.'];
+
+  if (intent === 'family') {
+    return {
+      intent,
+      answer: 'For children, older adults, pregnancy, asthma, COPD, and cardiovascular sensitivity, choose the conservative exposure plan.',
+      keyActions: [
+        'Move exercise and play indoors when risk is unhealthy for sensitive groups or worse.',
+        'Plan short, necessary trips outside the peak smog window.',
+        'Keep prescribed medicines available according to the person’s existing care plan.',
+      ],
+      whyItMatters: 'Sensitive people can experience effects at lower pollution levels, so the household plan should follow its most sensitive member.',
+      safetyNote: 'This assistant does not diagnose or change treatment. Use clinician instructions and local emergency services for acute symptoms.',
+      sourceGuidance: 'EPA AQI sensitive-group guidance and local public-health advice',
+    };
+  }
+
+  return {
+    intent,
+    answer: intent === 'today'
+      ? `Today’s plan for ${context.plan.location.city}: protect indoor air, reduce peak exposure, and choose the lowest-emission practical routine.`
+      : `For ${context.plan.location.city}, follow the verified ${intent} actions below while the effective risk is ${context.plan.overallRisk.replace('_', ' ')}.`,
+    keyActions: actions,
+    whyItMatters: `This guidance uses AQI ${Math.round(context.airQuality.aqi)}, ${context.weather.temperatureC}°C weather, ${context.weather.windSpeedKmh} km/h wind, and the resident profile.`,
+    safetyNote,
+    sourceGuidance: recommendation?.sourceGuidance ?? 'Deterministic local safety fallback; replace with verified live provider data in production',
+  };
 }
 
 function safeContext(context: AssistantContext) {
@@ -137,7 +191,7 @@ export default {
     }
     if (!isContext(candidate.context)) return json({ error: 'A valid assistant context is required' }, 400);
 
-    const baseline = buildAssistantReply(candidate.question, candidate.context);
+    const baseline = deterministicReply(candidate.question, candidate.context);
     const env = getRuntimeEnv();
     const token = env.AI_GATEWAY_API_KEY || env.VERCEL_OIDC_TOKEN;
     if (!token) return json(baseline);
