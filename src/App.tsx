@@ -9,6 +9,7 @@ type AppScreen = 'intro' | 'welcome' | 'auth' | 'dashboard';
 
 function getInitialScreen(): AppScreen {
   try {
+    if (new URLSearchParams(window.location.search).get('welcome') === '1') return 'intro';
     return window.sessionStorage.getItem('breathesafe.session') ? 'dashboard' : 'intro';
   } catch {
     return 'welcome';
