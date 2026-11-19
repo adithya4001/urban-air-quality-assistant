@@ -20,7 +20,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
     </header>
 
     <main id="welcome">
-      <section className="landing-hero" aria-labelledby="landing-title">
+      <section
+        className="landing-hero"
+        aria-labelledby="landing-title"
+        onPointerMove={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          event.currentTarget.style.setProperty('--pointer-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+          event.currentTarget.style.setProperty('--pointer-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+        }}
+      >
+        <div className="landing-sun-flare" aria-hidden="true" />
+        <div className="landing-cloud cloud-left" aria-hidden="true">☁︎</div>
+        <div className="landing-cloud cloud-right" aria-hidden="true">☁︎</div>
+        <div className="landing-light-streak" aria-hidden="true" />
         <div className="landing-hero-copy">
           <p className="landing-kicker"><span className="pulse-dot" aria-hidden="true" /> WINTER AIR DECISION COMPANION</p>
           <h1 id="landing-title">Know the air.<br /><em>Choose your next move.</em></h1>

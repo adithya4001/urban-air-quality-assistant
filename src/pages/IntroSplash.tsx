@@ -11,8 +11,20 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({ onComplete }) => {
   }, [onComplete]);
 
   return (
-    <main className="intro-splash" aria-labelledby="intro-title">
+    <main
+      className="intro-splash"
+      aria-labelledby="intro-title"
+      onPointerMove={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        event.currentTarget.style.setProperty('--pointer-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+        event.currentTarget.style.setProperty('--pointer-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+      }}
+    >
       <div className="intro-noise" aria-hidden="true" />
+      <div className="intro-sun-flare" aria-hidden="true" />
+      <div className="intro-cloud intro-cloud-one" aria-hidden="true">☁︎</div>
+      <div className="intro-cloud intro-cloud-two" aria-hidden="true">☁︎</div>
+      <div className="intro-light-streak" aria-hidden="true" />
       <div className="intro-rings" aria-hidden="true"><span /><span /><span /><i className="intro-orbit-dot dot-one" /><i className="intro-orbit-dot dot-two" /><i className="intro-orbit-dot dot-three" /></div>
       <div className="intro-content">
         <div className="intro-mark" aria-hidden="true"><span>◒</span></div>
