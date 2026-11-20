@@ -1,4 +1,5 @@
 import React from 'react';
+import { ExampleAirReports } from '../components/ExampleAirReports';
 
 interface LandingPageProps {
   onSignIn: () => void;
@@ -50,21 +51,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
           <p className="landing-note">Personalized for residents, families, commuters, and outdoor-active people.</p>
         </div>
 
-        <div className="landing-hero-visual" aria-label="Example VaayuDootha decision preview">
-          <div className="visual-orbit visual-orbit-one" aria-hidden="true" />
-          <div className="visual-orbit visual-orbit-two" aria-hidden="true" />
-          <div className="air-glass-card">
-            <div className="air-card-topline"><span className="live-tag">EXAMPLE AIR REPORT</span><span>07:42 AM</span></div>
-            <div className="air-card-location"><span className="location-pin" aria-hidden="true">⌖</span><div><strong>Delhi, India</strong><small>Cold air · low wind · urban basin</small></div></div>
-            <div className="air-score-row"><div><small className="metric-caption">CURRENT AQI</small><strong className="air-score-number">164</strong><span className="air-score-status">Unhealthy</span></div><div className="air-ring" aria-hidden="true"><span>PM<br />2.5</span></div></div>
-            <div className="decision-divider" />
-            <p className="decision-label">YOUR NEXT BEST MOVE</p>
-            <div className="decision-main"><span className="decision-icon" aria-hidden="true">🌬️</span><div><strong>Swap the morning run</strong><span>Try an indoor workout; take the metro for your commute.</span></div></div>
-            <div className="decision-footer"><span>Asthma-aware plan</span><span>Why this? ↗</span></div>
-          </div>
-          <span className="floating-chip chip-weather">☁ 9°C · low wind</span>
-          <span className="floating-chip chip-family">✦ Family-safe choices</span>
-        </div>
+        <ExampleAirReports />
       </section>
 
       <section className="landing-proof-row" aria-label="VaayuDootha principles">
