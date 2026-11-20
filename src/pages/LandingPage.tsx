@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExampleAirReports } from '../components/ExampleAirReports';
+import { AirDecisionFlow } from '../components/AirDecisionFlow';
 
 interface LandingPageProps {
   onSignIn: () => void;
@@ -62,14 +63,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
 
       <section id="why-breathesafe" className="landing-story-section" aria-labelledby="story-title">
         <div className="section-intro-block"><p className="landing-kicker dark-kicker">WHY THIS MATTERS</p><h2 id="story-title">The air changes.<br />Your plan should too.</h2><p>One AQI number cannot tell a jogger, a parent, a commuter, and an asthma patient the same thing. VaayuDootha translates the situation into a decision each person can actually use.</p></div>
-        <div className="story-visual" aria-label="VaayuDootha input to action flow">
-          <div className="story-clouds" aria-hidden="true">☁︎　☁︎　☁︎</div>
-          <div className="story-flow-node"><span aria-hidden="true">🌫️</span><strong>Air + winter</strong><small>AQI, wind, temperature</small></div>
-          <div className="story-flow-line" aria-hidden="true">↓</div>
-          <div className="story-flow-node node-person"><span aria-hidden="true">🧭</span><strong>Your context</strong><small>Place, body, routine</small></div>
-          <div className="story-flow-line" aria-hidden="true">↓</div>
-          <div className="story-flow-node node-action"><span aria-hidden="true">✅</span><strong>One clear next move</strong><small>Protect yourself + the city</small></div>
-        </div>
+        <AirDecisionFlow />
       </section>
 
       <section id="how-it-works" className="landing-use-section" aria-labelledby="use-title">
