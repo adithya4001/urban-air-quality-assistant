@@ -16,7 +16,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
       <nav className="landing-nav-links" aria-label="Welcome navigation">
         <a href="#why-breathesafe">Why VaayuDootha</a>
         <a href="#how-it-works">How it works</a>
-        <button className="landing-signin-link" type="button" onClick={onSignIn}>Open workspace</button>
+        <button className="landing-signin-link" type="button" onClick={onSignIn}>Login</button>
       </nav>
     </header>
 
