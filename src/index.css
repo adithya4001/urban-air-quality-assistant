@@ -43,7 +43,7 @@ a { color: inherit; }
 
 /* Air report and personal workspace */
 :root { --display-type: Georgia, "Times New Roman", serif; }
-.landing-hero h1, .auth-visual h1, .resident-dashboard .workspace-summary h1 {
+.auth-visual h1, .resident-dashboard .workspace-summary h1 {
   font-family: var(--display-type);
   font-weight: 400;
   letter-spacing: -.055em;
@@ -217,8 +217,18 @@ a { color: inherit; }
 .landing-kicker { color: #557f7b; font-size: .68rem; font-weight: 900; letter-spacing: .17em; text-transform: uppercase; }
 .dark-kicker { color: #0f766e; }
 .pulse-dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #83ebbd; box-shadow: 0 0 0 5px rgb(131 235 189 / .12); vertical-align: 1px; }
-.landing-hero h1 { margin: 18px 0 22px; color: #21444a; font-size: clamp(3.3rem, 7vw, 6.8rem); font-weight: 500; letter-spacing: -.075em; line-height: .94; }
-.landing-hero h1 em { color: #8d665a; font-style: normal; }
+.landing-hero h1 {
+  margin: 18px 0 22px;
+  color: #203e43;
+  font-family: var(--font-sans);
+  font-size: clamp(3.3rem, 6.9vw, 6.8rem);
+  font-weight: 650;
+  letter-spacing: -.055em;
+  line-height: 1.04;
+}
+.landing-hero h1 span { display: block; }
+.landing-hero h1 span:nth-child(2) { color: #885f52; }
+.landing-hero h1 span:nth-child(3) { color: #3d2d27; }
 .landing-lede { max-width: 560px; color: #556f73; font-size: 1.02rem; line-height: 1.72; }
 .landing-hero-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
 .landing-primary-button, .landing-ghost-button { min-height: 46px; border-radius: 999px; padding: 12px 18px; font-weight: 850; transition: transform .2s ease, background .2s ease; }
@@ -464,7 +474,7 @@ a { color: inherit; }
   .landing-nav { width: calc(100% - 28px); padding: 18px 0; }
   .landing-nav-links a { display: none; }
   .landing-hero { min-height: 730px; padding: 120px 22px 48px; }
-  .landing-hero h1 { font-size: clamp(3rem, 16vw, 4.5rem); }
+  .landing-hero h1 { font-size: clamp(2.5rem, 11.9vw, 4.5rem); }
   .landing-lede { font-size: .92rem; }
   .landing-hero-visual { min-height: 400px; }
   .visual-orbit-two { width: 400px; height: 260px; }

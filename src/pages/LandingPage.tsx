@@ -35,7 +35,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
         <div className="landing-light-streak" aria-hidden="true" />
         <div className="landing-hero-copy">
           <p className="landing-kicker"><span className="pulse-dot" aria-hidden="true" /> WINTER AIR DECISION COMPANION</p>
-          <h1 id="landing-title">Know the air.<br /><em>Choose your next move.</em></h1>
+          <h1 id="landing-title">
+            <span>Know the air.</span>{' '}
+            <span>Choose your</span>{' '}
+            <span>next move.</span>
+          </h1>
           <p className="landing-lede">
             VaayuDootha turns pollution, weather, location, and your everyday routine into calm, practical guidance for safer days outside and cleaner air inside.
           </p>
