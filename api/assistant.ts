@@ -157,7 +157,14 @@ async function explainWithGateway(question: string, context: AssistantContext, t
     }),
   });
 
-  if (!response.ok) throw new Error(`AI Gateway returned ${response.status}`);
+  if (!response.ok) {
+    const failure = await response.json().catch(() => null) as {
+      error?: { code?: string; type?: string };
+    } | null;
+    const code = failure?.error?.code ?? failure?.error?.type;
+    const detail = typeof code === 'string' && /^[a-z0-9_]{1,80}$/i.test(code) ? ` (${code})` : '';
+    throw new Error(`AI Gateway returned ${response.status}${detail}`);
+  }
   const payload = await response.json() as {
     choices?: Array<{ message?: { content?: string } }>;
   };
@@ -188,7 +195,8 @@ export default {
 
     const baseline = deterministicReply(candidate.question, candidate.context);
     const env = getRuntimeEnv();
-    const token = env.AI_GATEWAY_API_KEY || env.VERCEL_OIDC_TOKEN;
+    // Vercel supplies a fresh OIDC credential on production function requests.
+    const token = env.AI_GATEWAY_API_KEY || request.headers.get('x-vercel-oidc-token') || env.VERCEL_OIDC_TOKEN;
     if (!token) return json(baseline);
 
     try {
