@@ -1,41 +1,65 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { startIntroCity } from './introCity';
+import './introSplash.css';
 
 interface IntroSplashProps {
   onComplete: () => void;
 }
 
+const title = 'VaayuDootha';
+const cityRevealAt = 2350;
+const titleRevealAt = 3450;
+const letterInterval = 85;
+const subtitleRevealAt = 4630;
+const fadeAt = 6050;
+const completeAt = 6650;
+
 export const IntroSplash: React.FC<IntroSplashProps> = ({ onComplete }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
   useEffect(() => {
-    const timer = window.setTimeout(onComplete, 4200);
-    return () => window.clearTimeout(timer);
+    const canvas = canvasRef.current;
+    const letters = titleRef.current?.querySelectorAll<HTMLSpanElement>('.city-intro-letter');
+    const stopCity = canvas && letters && startIntroCity(canvas, Array.from(letters), {
+      gatherAt: titleRevealAt - 325,
+      titleReadyAt: subtitleRevealAt,
+    });
+    const timer = window.setTimeout(onComplete, completeAt);
+    return () => {
+      window.clearTimeout(timer);
+      stopCity?.();
+    };
   }, [onComplete]);
 
+  const timing = {
+    '--city-reveal-at': `${cityRevealAt}ms`,
+    '--title-reveal-at': `${titleRevealAt}ms`,
+    '--letter-interval': `${letterInterval}ms`,
+    '--subtitle-reveal-at': `${subtitleRevealAt}ms`,
+    '--intro-fade-at': `${fadeAt}ms`,
+    '--intro-fade-duration': `${completeAt - fadeAt}ms`,
+  } as React.CSSProperties;
+
   return (
-    <main
-      className="intro-splash"
-      aria-labelledby="intro-title"
-      onPointerMove={(event) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        event.currentTarget.style.setProperty('--pointer-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
-        event.currentTarget.style.setProperty('--pointer-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
-      }}
-    >
-      <div className="intro-noise" aria-hidden="true" />
-      <div className="intro-sun-flare" aria-hidden="true" />
-      <div className="intro-cloud intro-cloud-one" aria-hidden="true">☁︎</div>
-      <div className="intro-cloud intro-cloud-two" aria-hidden="true">☁︎</div>
-      <div className="intro-light-streak" aria-hidden="true" />
-      <div className="intro-rings" aria-hidden="true"><span /><span /><span /><i className="intro-orbit-dot dot-one" /><i className="intro-orbit-dot dot-two" /><i className="intro-orbit-dot dot-three" /></div>
-      <div className="intro-content">
-        <div className="intro-mark" aria-hidden="true"><span>◒</span></div>
-        <p className="intro-overline">A calmer way to move through winter air</p>
-        <h1 id="intro-title" aria-label="VaayuDootha"><span className="intro-word intro-word-one">Vaayu</span><span className="intro-word intro-word-two">Dootha</span></h1>
-        <p className="intro-tagline">Not just an AQI number.<br /><strong>A better next move.</strong></p>
-        <div className="intro-progress" aria-hidden="true"><span /></div>
-        <p className="intro-loading">Reading the air around you <span>·</span><span>·</span><span>·</span></p>
+    <main className="city-intro" style={timing} aria-labelledby="intro-title">
+      <canvas ref={canvasRef} className="city-intro-canvas" aria-hidden="true" />
+      <div className="city-intro-mist" aria-hidden="true" />
+      <div className="city-intro-stage" aria-hidden="true">
+        <div className="city-intro-shadow" />
+        <div className="city-intro-ball" />
       </div>
-      <button className="intro-skip" type="button" onClick={onComplete}>Skip intro <span aria-hidden="true">↗</span></button>
-      <p className="intro-footer">Personalized · Explainable · Safety-first</p>
+      <div className="city-intro-copy">
+        <h1 id="intro-title" ref={titleRef} aria-label={title}>
+          {Array.from(title, (letter, index) => (
+            <span key={index} className="city-intro-letter" aria-hidden="true"
+              style={{ '--letter-index': index } as React.CSSProperties}>{letter}</span>
+          ))}
+        </h1>
+        <div className="city-intro-divider" aria-hidden="true" />
+        <p>Plan your day around the air you breathe.</p>
+      </div>
+      <div className="city-intro-exit" aria-hidden="true" />
     </main>
   );
 };

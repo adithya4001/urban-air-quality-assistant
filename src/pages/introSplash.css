@@ -1,0 +1,139 @@
+.city-intro {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: linear-gradient(#23425e, #b1d6e4 52%, #354337 52%);
+  color: #fff;
+}
+
+.city-intro-canvas, .city-intro-stage, .city-intro-exit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.city-intro-mist {
+  position: absolute;
+  inset: 45% 0 auto;
+  height: 16%;
+  background: linear-gradient(transparent, rgb(241 245 249 / .29), transparent);
+  pointer-events: none;
+}
+
+.city-intro-stage {
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  animation: city-stage-out .62s var(--city-reveal-at) ease both;
+}
+
+.city-intro-ball, .city-intro-shadow { grid-area: 1 / 1; border-radius: 50%; }
+
+.city-intro-ball {
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle at 32% 28%, #52525b, #18181b 45%, #050508);
+  animation: city-ball-drop var(--city-reveal-at) linear both;
+}
+
+.city-intro-shadow {
+  width: 52px;
+  height: 14px;
+  background: radial-gradient(ellipse, rgb(0 0 0 / .42), transparent 72%);
+  animation: city-ball-shadow 1.45s ease both;
+}
+
+.city-intro-copy {
+  position: absolute;
+  z-index: 1;
+  top: 43%;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  width: min(94%, 980px);
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.city-intro-copy::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -55% -4%;
+  background: radial-gradient(ellipse, rgb(15 23 42 / .89), rgb(15 23 42 / .46) 45%, transparent 73%);
+  animation: city-title-in .8s calc(var(--title-reveal-at) - 100ms) both;
+}
+
+.city-intro-copy h1 {
+  display: flex;
+  justify-content: center;
+  gap: .11em;
+  font-size: clamp(1.85rem, 7.3vw, 5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  text-shadow: 0 3px 14px #04152c;
+}
+
+.city-intro-letter {
+  display: block;
+  animation: city-letter-in .46s calc(var(--title-reveal-at) + var(--letter-interval) * var(--letter-index)) cubic-bezier(.2,.8,.2,1) both;
+}
+
+.city-intro-divider {
+  width: min(75%, 490px);
+  height: 2px;
+  margin: 12px 0;
+  background: linear-gradient(90deg, transparent, #fff, #f7a565, #fff, transparent);
+  animation: city-divider-in .55s calc(var(--subtitle-reveal-at) - 160ms) both;
+}
+
+.city-intro-copy p {
+  border: 1px solid rgb(255 255 255 / .25);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: rgb(15 23 42 / .78);
+  font-size: clamp(.85rem, 2.1vw, 1.14rem);
+  font-weight: 650;
+  animation: city-title-in .55s var(--subtitle-reveal-at) ease both;
+}
+
+.city-intro-exit {
+  z-index: 3;
+  background: #e7f0ec;
+  animation: city-exit-in var(--intro-fade-duration) var(--intro-fade-at) ease both;
+}
+
+@keyframes city-ball-drop {
+  0% { transform: translate(clamp(-320px, -34vw, -95px), -30vh); animation-timing-function: ease-in; }
+  21% { transform: translate(clamp(-205px, -22vw, -62px), 48px); animation-timing-function: ease-out; }
+  31% { transform: translate(clamp(-130px, -14vw, -40px), 14px); animation-timing-function: ease-in; }
+  41% { transform: translate(clamp(-65px, -7vw, -20px), 48px); animation-timing-function: ease-out; }
+  49% { transform: translate(-22px, 35px); animation-timing-function: ease-in; }
+  57% { transform: translate(0, 48px); animation-timing-function: ease-out; }
+  67% { transform: translate(0, 0) scale(1); animation-timing-function: ease-in-out; }
+  86% { transform: scale(3); animation-timing-function: ease-in; }
+  100% { transform: scale(110); }
+}
+
+@keyframes city-ball-shadow {
+  0% { opacity: 0; transform: translate(clamp(-320px, -34vw, -95px), 64px); }
+  38% { opacity: .8; transform: translate(clamp(-205px, -22vw, -62px), 64px); }
+  66% { opacity: .4; transform: translate(clamp(-65px, -7vw, -20px), 64px); }
+  85% { opacity: .7; transform: translate(0, 64px); }
+  100% { opacity: 0; transform: translate(0, 64px); }
+}
+
+@keyframes city-stage-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes city-letter-in {
+  from { opacity: 0; transform: scale(.72); filter: blur(5px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes city-title-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes city-divider-in { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
+@keyframes city-exit-in { from { opacity: 0; } to { opacity: 1; } }
