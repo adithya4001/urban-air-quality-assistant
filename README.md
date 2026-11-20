@@ -1,4 +1,4 @@
-# urban-air-quality-assistant — BreatheSafe
+# urban-air-quality-assistant — VaayuDootha
 
 **PromptWars Virtual Challenge 6: Urban Air Quality Assistant**  
 *GenAI-powered Urban Air Quality Assistant for winter smog and pollution guidance*
@@ -31,7 +31,7 @@ This solution provides **personalized, deterministic guidance** tailored to loca
 
 ### 2.1 Deterministic-First Safety Model
 Generative AI must **explain, contextualize, and personalize** advice, but it must **never invent or hallucinate unsafe medical recommendations**. 
-All baseline recommendations and risk thresholds in BreatheSafe are calculated by a pure, deterministic engine (`src/domain/recommendationEngine.ts`) with zero stochastic drift. Future GenAI extensions consume this deterministic output as a hard constraint.
+All baseline recommendations and risk thresholds in VaayuDootha are calculated by a pure, deterministic engine (`src/domain/recommendationEngine.ts`) with zero stochastic drift. Future GenAI extensions consume this deterministic output as a hard constraint.
 
 ### 2.2 Provider Abstraction, Live Data & Safe Fallback
 Environmental data (air quality and meteorological snapshots) is mediated via interfaces:
@@ -137,7 +137,7 @@ urban-air-quality-assistant/
 
 ## 7. Explainable Assistant Boundary
 
-The interface includes an **Ask BreatheSafe** panel with suggested questions for today, indoor air, outdoor activity, family sensitivity, commute, and environmental impact. By default, `DemoAssistantProvider` is deterministic and offline-safe. An optional `RemoteAssistantProvider` can call a server-side endpoint when `VITE_ASSISTANT_ENDPOINT` is configured; `FallbackAssistantProvider` automatically returns the deterministic answer if that endpoint fails. Model credentials must remain on the server and are never placed in the browser bundle.
+The interface includes an **Ask VaayuDootha** panel with suggested questions for today, indoor air, outdoor activity, family sensitivity, commute, and environmental impact. By default, `DemoAssistantProvider` is deterministic and offline-safe. An optional `RemoteAssistantProvider` can call a server-side endpoint when `VITE_ASSISTANT_ENDPOINT` is configured; `FallbackAssistantProvider` automatically returns the deterministic answer if that endpoint fails. Model credentials must remain on the server and are never placed in the browser bundle.
 
 The app persists only the selected mock location and resident preferences in browser storage. Storage failures are ignored safely and never block the plan.
 

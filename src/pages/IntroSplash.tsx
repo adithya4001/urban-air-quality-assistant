@@ -29,7 +29,7 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({ onComplete }) => {
       <div className="intro-content">
         <div className="intro-mark" aria-hidden="true"><span>◒</span></div>
         <p className="intro-overline">A calmer way to move through winter air</p>
-        <h1 id="intro-title"><span className="intro-word intro-word-one">Breathe</span><span className="intro-word intro-word-two">Safe</span></h1>
+        <h1 id="intro-title" aria-label="VaayuDootha"><span className="intro-word intro-word-one">Vaayu</span><span className="intro-word intro-word-two">Dootha</span></h1>
         <p className="intro-tagline">Not just an AQI number.<br /><strong>A better next move.</strong></p>
         <div className="intro-progress" aria-hidden="true"><span /></div>
         <p className="intro-loading">Reading the air around you <span>·</span><span>·</span><span>·</span></p>

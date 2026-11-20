@@ -11,7 +11,7 @@ export interface IAssistantProvider {
  * and guarantees useful behavior when a model or network is unavailable.
  */
 export class DemoAssistantProvider implements IAssistantProvider {
-  public readonly providerName = 'BreatheSafe deterministic safety fallback';
+  public readonly providerName = 'VaayuDootha deterministic safety fallback';
 
   public async ask(question: string, context: AssistantContext): Promise<AssistantReply> {
     return { ...buildAssistantReply(question, context), source: 'rules' };

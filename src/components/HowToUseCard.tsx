@@ -10,7 +10,7 @@ export const HowToUseCard: React.FC<HowToUseCardProps> = ({ onJumpToControls }) 
       <p className="eyebrow">START HERE</p>
       <h2 id="how-to-use-title" className="section-title">A practical check before you step out</h2>
       <p className="section-copy">
-        BreatheSafe is meant for a repeatable daily decision: choose your place, describe the person or household, then act on the first three cards.
+        VaayuDootha is meant for a repeatable daily decision: choose your place, describe the person or household, then act on the first three cards.
       </p>
       <button className="primary-button" type="button" onClick={onJumpToControls}>Set up today’s plan</button>
     </div>

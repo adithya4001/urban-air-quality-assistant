@@ -40,7 +40,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
     <section className="assistant-panel card" aria-labelledby="assistant-title">
       <div className="assistant-heading">
         <div>
-          <h2 id="assistant-title" className="card-title">Ask BreatheSafe</h2>
+          <h2 id="assistant-title" className="card-title">Ask VaayuDootha</h2>
           <p className="section-copy">Ask about exercise, commuting, or the air inside your home.</p>
         </div>
       </div>

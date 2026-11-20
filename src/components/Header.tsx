@@ -15,9 +15,9 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ profile, mode, brightness, onModeChange, onBrightnessChange, onExit }) => (
   <header className="site-header">
     <div className="header-inner">
-      <a className="brand-lockup" href="#main-content" aria-label="BreatheSafe home">
+      <a className="brand-lockup" href="#main-content" aria-label="VaayuDootha home">
         <span className="brand-mark" aria-hidden="true">◒</span>
-        <strong>BreatheSafe</strong>
+        <strong>VaayuDootha</strong>
       </a>
       <details className="account-menu">
         <summary>

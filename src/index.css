@@ -503,7 +503,7 @@ a { color: inherit; }
   .how-to-use { grid-template-columns: 1fr; }
 }
 @media (max-width: 650px) {
-  .intro-content h1 { font-size: clamp(4rem, 20vw, 6rem); }
+  .intro-content h1 { gap: 0; font-size: clamp(2.5rem, 12vw, 5rem); }
   .intro-overline { font-size: .58rem; }
   .intro-tagline { font-size: .88rem; }
   .intro-skip { right: 18px; bottom: 22px; }

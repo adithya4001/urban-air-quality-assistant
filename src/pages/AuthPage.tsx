@@ -15,7 +15,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onAuthenticated, onT
       <section className="auth-visual" aria-labelledby="auth-intro">
         <button className="auth-back-button" type="button" onClick={onBack}>← Back to welcome</button>
         <div className="auth-visual-content">
-          <p className="landing-kicker">BreatheSafe</p>
+          <p className="landing-kicker">VaayuDootha</p>
           <h1 id="auth-intro">Make room for a better day.</h1>
           <p>Check the air around you and find a practical next step for your routine.</p>
         </div>
