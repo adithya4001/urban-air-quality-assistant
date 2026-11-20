@@ -32,7 +32,7 @@ export const UserProfileEditor: React.FC<UserProfileEditorProps> = ({ profile, o
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">2. Resident Profile & Lifestyle</h2>
+        <h2 className="card-title">Resident profile</h2>
       </div>
 
       <div className="form-group">

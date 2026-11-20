@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AssistantPanel } from '../components/AssistantPanel';
 import { EnvironmentalCard } from '../components/EnvironmentalCard';
 import { FallbackBanner } from '../components/FallbackBanner';
-import { HowToUseCard } from '../components/HowToUseCard';
 import { LocationSelector } from '../components/LocationSelector';
 import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
 import { RecommendationCard } from '../components/RecommendationCard';
@@ -15,6 +14,14 @@ import { MOCK_LOCATIONS } from '../services/mockData';
 import { OpenMeteoAirQualityProvider } from '../services/OpenMeteoAirQualityProvider';
 import { OpenMeteoWeatherProvider } from '../services/OpenMeteoWeatherProvider';
 import { getRiskLevelLabel } from '../utils/formatters';
+
+const views = [
+  { id: 'chat', label: 'Assistant' },
+  { id: 'plan', label: 'Action plan' },
+  { id: 'insights', label: 'Air insights' },
+  { id: 'settings', label: 'Location & profile' },
+] as const;
+type View = (typeof views)[number]['id'];
 
 const LOCATION_STORAGE_KEY = 'breathesafe.location';
 const PROFILE_STORAGE_KEY = 'breathesafe.profile';
@@ -38,7 +45,13 @@ function getStoredLocation(): Location {
   if (typeof window === 'undefined') return MOCK_LOCATIONS[0];
   try {
     const locationId = window.localStorage.getItem(LOCATION_STORAGE_KEY);
-    return MOCK_LOCATIONS.find((location) => location.id === locationId) ?? MOCK_LOCATIONS[0];
+    const preset = MOCK_LOCATIONS.find((location) => location.id === locationId);
+    if (preset) return preset;
+    const saved = JSON.parse(locationId ?? 'null') as Location | null;
+    if (saved?.country === 'India' && typeof saved.name === 'string' && typeof saved.city === 'string'
+        && typeof saved.id === 'string' && Number.isFinite(saved.coordinates?.latitude)
+        && Number.isFinite(saved.coordinates?.longitude)) return saved;
+    return MOCK_LOCATIONS[0];
   } catch {
     return MOCK_LOCATIONS[0];
   }
@@ -73,15 +86,19 @@ export const DashboardPage: React.FC = () => {
   );
   const [selectedLocation, setSelectedLocation] = useState<Location>(getStoredLocation);
   const [userProfile, setUserProfile] = useState<UserProfile>(getStoredProfile);
+  const [view, setView] = useState<View>('chat');
   const [forceFallback, setForceFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | 'all'>('all');
   const [dailyPlan, setDailyPlan] = useState<DailyPlan | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => persist(LOCATION_STORAGE_KEY, selectedLocation.id), [selectedLocation]);
+  useEffect(() => {
+    const value = MOCK_LOCATIONS.includes(selectedLocation) ? selectedLocation.id : JSON.stringify(selectedLocation);
+    try { window.localStorage.setItem(LOCATION_STORAGE_KEY, value); } catch { /* Optional storage. */ }
+  }, [selectedLocation]);
   useEffect(() => persist(PROFILE_STORAGE_KEY, userProfile), [userProfile]);
 
   useEffect(() => {
@@ -104,7 +121,10 @@ export const DashboardPage: React.FC = () => {
         ));
         setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       } catch {
-        if (!cancelled) setLoadError('We could not prepare the plan. Try refreshing the safety baseline.');
+        if (!cancelled) {
+          setDailyPlan(null);
+          setLoadError('We could not prepare the plan. Try refreshing conditions.');
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -120,132 +140,121 @@ export const DashboardPage: React.FC = () => {
       : dailyPlan.recommendations.filter((recommendation) => recommendation.category === selectedCategory);
   }, [dailyPlan, selectedCategory]);
 
-  const assistantContext: AssistantContext | null = dailyPlan
-    ? { profile: userProfile, airQuality: dailyPlan.airQuality, weather: dailyPlan.weather, plan: dailyPlan }
+  const currentPlan = dailyPlan?.location === selectedLocation && dailyPlan.userProfile === userProfile
+    ? dailyPlan
+    : null;
+  const assistantContext: AssistantContext | null = currentPlan
+    ? { profile: currentPlan.userProfile, airQuality: currentPlan.airQuality, weather: currentPlan.weather, plan: currentPlan }
     : null;
 
-  const riskLabel = dailyPlan ? getRiskLevelLabel(dailyPlan.overallRisk) : 'Preparing plan';
-
   return (
-    <main id="main-content" className="main-content" role="main">
-      <section className="hero-shell" aria-labelledby="page-title">
-        <div className="hero-copy">
-          <p className="eyebrow">WINTER AIR DECISION SUPPORT</p>
-          <h2 id="page-title">Make today’s air easier to navigate.</h2>
-          <p>
-            BreatheSafe turns local conditions and resident context into practical actions for cleaner indoor air,
-            lower exposure, and lower-emission routines.
-          </p>
-          <div className="hero-meta" aria-label="Current plan summary">
-            <span className="status-pill"><span className="status-dot" aria-hidden="true" /> {dailyPlan?.dataSource === 'live' ? 'Live conditions' : 'Safety-first plan'}</span>
-            <span>{selectedLocation.city}, {selectedLocation.country}</span>
-            <span>{lastUpdated ? `Updated ${lastUpdated}` : 'Loading conditions'}</span>
-          </div>
-        </div>
-        <div className="hero-score" aria-label={`Current effective risk: ${riskLabel}`}>
-          <span className="hero-score-label">CURRENT EFFECTIVE RISK</span>
-          <strong>{dailyPlan ? riskLabel : '—'}</strong>
-          <span>{dailyPlan ? `AQI ${Math.round(dailyPlan.airQuality.aqi)}` : 'Preparing your plan'}</span>
-        </div>
-      </section>
-
-      <MedicalDisclaimer />
-
-      <HowToUseCard onJumpToControls={() => document.getElementById('control-room')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
-
-      <div id="control-room" className="toolbar-row">
+    <main id="main-content" className="main-content resident-dashboard" tabIndex={-1}>
+      <header className="workspace-summary">
         <div>
-          <p className="eyebrow">YOUR CONTROL ROOM</p>
-          <h2 className="section-title">Today’s breathable-air plan</h2>
-          <p className="section-copy">Change the place or resident context to see the recommendation engine recalculate.</p>
+          <h1>Your air dashboard</h1>
+          <p>{selectedLocation.name}, {selectedLocation.country}</p>
         </div>
-        <button className="secondary-button" type="button" onClick={() => setRefreshNonce((value) => value + 1)} disabled={isLoading}>
-          {isLoading ? 'Refreshing…' : 'Refresh plan'}
-        </button>
-      </div>
-
-      <FallbackBanner
-        isFallback={dailyPlan?.fallbackActive ?? false}
-        fallbackReason={dailyPlan?.fallbackReason}
-        onToggleForceFallback={setForceFallback}
-        isForced={forceFallback}
-      />
-
-      {loadError && <div className="error-banner" role="alert">{loadError}</div>}
-
-      <div className="dashboard-grid">
-        <aside className="control-column" aria-label="Resident and location controls">
-          <LocationSelector selectedLocation={selectedLocation} onSelectLocation={setSelectedLocation} disabled={isLoading} />
-          <UserProfileEditor profile={userProfile} onChange={setUserProfile} />
-          <div className="card trust-card">
-            <p className="eyebrow">TRANSPARENCY</p>
-            <h2 className="card-title">What the app knows</h2>
-            <ul className="trust-list">
-              <li>Location scenario and topography</li>
-              <li>Air-quality and weather snapshot</li>
-              <li>Resident sensitivities and routine</li>
-            </ul>
-            <p className="muted-note">Live weather and air-quality forecasts are used when available. If a signal fails, the plan stays usable and labels the fallback instead of silently pretending it is live.</p>
+        {currentPlan && (
+          <div className="workspace-reading">
+            <strong>{currentPlan.airQuality.isStaleOrFallback ? 'Sample ' : ''}US AQI {Math.round(currentPlan.airQuality.aqi)}</strong>
+            <span>{getRiskLevelLabel(currentPlan.overallRisk)} · {currentPlan.fallbackActive ? 'Fallback in use' : 'Model estimate'}</span>
           </div>
-        </aside>
+        )}
+      </header>
 
-        <section className="content-column" aria-label="Environmental intelligence and action plan">
-          {isLoading && !dailyPlan ? (
-            <div className="card loading-card" role="status" aria-live="polite">
-              <span className="loading-orb" aria-hidden="true" />
-              <div><strong>Building your plan…</strong><p>Combining conditions, profile, and winter exposure rules.</p></div>
+      <div className="workspace-layout">
+        <nav className="workspace-nav" aria-label="Dashboard views">
+          {views.map(({ id, label }) => (
+            <button key={id} type="button" aria-current={view === id ? 'page' : undefined} onClick={() => setView(id)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="workspace-content">
+          {view !== 'settings' && loadError && (
+            <div className="error-banner" role="alert">
+              <p>{loadError}</p>
+              <button className="secondary-button" type="button" onClick={() => setRefreshNonce((value) => value + 1)}>Try again</button>
             </div>
-          ) : dailyPlan ? (
-            <>
-              <EnvironmentalCard
-                airQuality={dailyPlan.airQuality}
-                weather={dailyPlan.weather}
-                effectiveRisk={dailyPlan.overallRisk}
-                dataSource={dailyPlan.dataSource}
-                dataAttribution={dailyPlan.dataAttribution}
-              />
+          )}
+          {view !== 'settings' && !loadError && (isLoading || !currentPlan) && (
+            <p className="workspace-loading" role="status">Updating conditions and your plan…</p>
+          )}
+          {currentPlan?.fallbackActive && view !== 'insights' && view !== 'settings' && (
+            <p className="workspace-loading" role="status">Some conditions use sample data. <button type="button" className="workspace-text-button" onClick={() => setView('insights')}>Check data sources</button></p>
+          )}
 
-              <div className="plan-strip" aria-label="Plan priorities">
-                <div><span className="plan-index">01</span><strong>Protect sensitive people</strong><span>Use the most cautious household plan.</span></div>
-                <div><span className="plan-index">02</span><strong>Reduce peak exposure</strong><span>Change timing and intensity before changing everything.</span></div>
-                <div><span className="plan-index">03</span><strong>Lower local emissions</strong><span>Choose shared, electric, or combined trips.</span></div>
+          <div hidden={view !== 'chat'}>
+            {assistantContext && <AssistantPanel key={currentPlan?.generatedAt} context={assistantContext} />}
+          </div>
+
+          {view === 'plan' && currentPlan && (
+            <section className="recommendation-section" aria-labelledby="recommendations-title">
+              <div className="section-heading-row">
+                <div>
+                  <h2 id="recommendations-title" className="section-title">Recommended actions</h2>
+                  <p className="section-copy">Practical steps for the location and profile you selected.</p>
+                </div>
+                <div className="filter-control">
+                  <label htmlFor="category-filter">Show</label>
+                  <select id="category-filter" className="form-select" value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value as RecommendationCategory | 'all')}>
+                    <option value="all">All guidance ({currentPlan.recommendations.length})</option>
+                    <option value="outdoor_activity">Outdoor activity</option>
+                    <option value="commute">Commute</option>
+                    <option value="indoor_air">Indoor air</option>
+                    <option value="protective_equipment">Respirator</option>
+                    <option value="emission_reduction">Emissions</option>
+                  </select>
+                </div>
               </div>
-
-              {assistantContext && <AssistantPanel context={assistantContext} />}
-
-              <section className="recommendation-section" aria-labelledby="recommendations-title">
-                <div className="section-heading-row">
-                  <div>
-                    <p className="eyebrow">EXPLAINABLE ACTIONS</p>
-                    <h2 id="recommendations-title" className="section-title">Your action feed</h2>
-                    <p className="section-copy">Every card shows the action, why it helps, and the guidance basis.</p>
-                  </div>
-                  <div className="filter-control">
-                    <label htmlFor="category-filter">Show</label>
-                    <select id="category-filter" className="form-select" value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value as RecommendationCategory | 'all')}>
-                      <option value="all">All guidance ({dailyPlan.recommendations.length})</option>
-                      <option value="outdoor_activity">Outdoor activity</option>
-                      <option value="commute">Commute</option>
-                      <option value="indoor_air">Indoor air</option>
-                      <option value="protective_equipment">Respirator</option>
-                      <option value="emission_reduction">Emissions</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="recommendation-list" role="feed" aria-busy={isLoading} aria-label="Personalized recommendations">
+              <div className="recommendation-list" aria-busy={isLoading} aria-label="Personalized recommendations">
+                {filteredRecommendations.length === 0 && <p className="section-copy">No actions in this category today.</p>}
                   {filteredRecommendations.map((recommendation) => <RecommendationCard key={recommendation.id} recommendation={recommendation} />)}
-                </div>
-              </section>
-            </>
-          ) : null}
-        </section>
-      </div>
+              </div>
+            </section>
+          )}
 
-      <footer className="app-footer" role="contentinfo">
-        <p><strong>BreatheSafe</strong> · PromptWars Virtual Challenge 6 · Urban Air Quality Assistant</p>
-        <p>Live environmental data: Open-Meteo weather and CAMS ENSEMBLE air-quality forecast, with labelled fallback when unavailable.</p>
-        <p>General environmental guidance only. Verify live data, local advisories, and clinician instructions before acting.</p>
-      </footer>
+          {view === 'insights' && (
+            <section className="workspace-insights" aria-labelledby="insights-title">
+              <div className="section-heading-row">
+                <div>
+                  <h2 id="insights-title" className="section-title">Air insights</h2>
+                  <p className="section-copy">Modelled US AQI and weather for the selected location{lastUpdated && currentPlan ? ` · refreshed at ${lastUpdated}` : ''}.</p>
+                </div>
+                <button className="secondary-button" type="button" disabled={isLoading} onClick={() => setRefreshNonce((value) => value + 1)}>
+                  Refresh conditions
+                </button>
+              </div>
+              {currentPlan && (
+                <>
+                  <EnvironmentalCard
+                    airQuality={currentPlan.airQuality}
+                    weather={currentPlan.weather}
+                    effectiveRisk={currentPlan.overallRisk}
+                    dataSource={currentPlan.dataSource}
+                    dataAttribution={currentPlan.dataAttribution}
+                  />
+                  <FallbackBanner
+                    isFallback={currentPlan.fallbackActive}
+                    fallbackReason={currentPlan.fallbackReason}
+                    onToggleForceFallback={setForceFallback}
+                    isForced={forceFallback}
+                  />
+                </>
+              )}
+            </section>
+          )}
+
+          {view === 'settings' && (
+            <section className="workspace-settings" aria-label="Location and resident profile">
+              <LocationSelector selectedLocation={selectedLocation} onSelectLocation={setSelectedLocation} />
+              <UserProfileEditor profile={userProfile} onChange={setUserProfile} />
+            </section>
+          )}
+        </div>
+      </div>
+      <MedicalDisclaimer />
     </main>
   );
 };

@@ -23,7 +23,7 @@ export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
     <div className="card" style={{ marginBottom: '24px' }}>
       <div className="card-header">
         <div>
-          <h2 className="card-title">3. Environmental Snapshot & Inversion Dynamics</h2>
+          <h2 className="card-title">Environmental snapshot</h2>
           <p className="muted-note" style={{ marginTop: '4px' }}>
             {dataSource === 'live'
               ? 'Live conditions shape this plan; recommendations still follow deterministic safety rules.'

@@ -14,7 +14,7 @@ const quickQuestions = [
 ];
 
 export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
-  const [question, setQuestion] = useState('What should I do today?');
+  const [question, setQuestion] = useState('');
   const [reply, setReply] = useState<AssistantReply | null>(null);
   const [isAsking, setIsAsking] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
@@ -22,14 +22,14 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
 
   const ask = async (value = question) => {
     const trimmed = value.trim();
-    if (!trimmed) return;
+    if (!trimmed || isAsking) return;
     setQuestion(trimmed);
     setIsAsking(true);
     setProviderError(null);
     try {
       setReply(await provider.ask(trimmed, context));
     } catch {
-      setProviderError('The assistant could not answer right now. Use the action cards below as the verified safety baseline.');
+      setProviderError('The assistant could not answer right now. Open Action plan for your recommendations.');
     } finally {
       setIsAsking(false);
     }
@@ -50,7 +50,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
 
       <div className="quick-question-list" aria-label="Suggested questions">
         {quickQuestions.map((item) => (
-          <button key={item} type="button" className="chip-button" onClick={() => ask(item)}>
+          <button key={item} type="button" className="chip-button" disabled={isAsking} onClick={() => ask(item)}>
             {item}
           </button>
         ))}
