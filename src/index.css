@@ -272,17 +272,18 @@ a { color: inherit; }
 /* Interactive example air reports */
 .landing-hero .report-deck { min-height: 560px; isolation: isolate; }
 .report-deck .visual-orbit-one {
+  z-index: 0;
   width: min(calc(100% - 8px), 565px);
-  height: 435px;
-  transform: rotate(-27deg);
+  height: 335px;
+  transform: rotate(-42deg);
   pointer-events: none;
 }
 .report-deck .report-orbit {
   z-index: 1;
   width: min(calc(100% - 12px), 560px);
-  height: 504px;
+  height: 335px;
   border-color: rgb(62 103 93 / .29);
-  transform: rotate(21deg);
+  transform: rotate(42deg);
   pointer-events: none;
 }
 .report-dot {
@@ -424,8 +425,8 @@ a { color: inherit; }
 }
 @media (max-width: 650px) {
   .landing-hero .report-deck { min-height: 550px; }
-  .report-deck .report-orbit { height: 492px; transform: rotate(7deg); }
-  .report-deck .visual-orbit-one { height: 464px; transform: rotate(-12deg); }
+  .report-deck .report-orbit { height: 310px; transform: rotate(42deg); }
+  .report-deck .visual-orbit-one { height: 310px; transform: rotate(-42deg); }
   .report-deck .chip-weather { top: 7%; }
   .report-stack { width: min(365px, calc(100% - 52px)); }
   .report-stack .report-card { padding: 17px; }

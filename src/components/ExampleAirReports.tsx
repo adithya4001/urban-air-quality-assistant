@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const rotationInterval = 6500;
+const rotationInterval = 3000;
 
 const reports = [
   {
@@ -128,9 +128,9 @@ export function ExampleAirReports() {
       <button className="report-arrow report-next" type="button" aria-label="Next report" onClick={() => step(1)}>
         <span aria-hidden="true">›</span>
       </button>
-      <button className="report-playback" type="button" onClick={() => setPlaying((value) => !value)}>
-        {playing ? 'Pause' : 'Play'}
-      </button>
+      {!playing && (
+        <button className="report-playback" type="button" onClick={() => setPlaying(true)}>Play</button>
+      )}
     </section>
   );
 }
