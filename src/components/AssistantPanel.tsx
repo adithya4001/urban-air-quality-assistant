@@ -15,7 +15,7 @@ const quickQuestions = [
 
 export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
   const [question, setQuestion] = useState('');
-  const [reply, setReply] = useState<AssistantReply | null>(null);
+  const [turns, setTurns] = useState<Array<{ question: string; reply: AssistantReply }>>([]);
   const [isAsking, setIsAsking] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
   const provider = useMemo(() => createAssistantProvider(), []);
@@ -23,11 +23,12 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
   const ask = async (value = question) => {
     const trimmed = value.trim();
     if (!trimmed || isAsking) return;
-    setQuestion(trimmed);
+    setQuestion('');
     setIsAsking(true);
     setProviderError(null);
     try {
-      setReply(await provider.ask(trimmed, context));
+      const reply = await provider.ask(trimmed, context);
+      setTurns((previous) => [...previous, { question: trimmed, reply }]);
     } catch {
       setProviderError('The assistant could not answer right now. Open Action plan for your recommendations.');
     } finally {
@@ -39,13 +40,9 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
     <section className="assistant-panel card" aria-labelledby="assistant-title">
       <div className="assistant-heading">
         <div>
-          <p className="eyebrow">PERSONALIZED GUIDE</p>
           <h2 id="assistant-title" className="card-title">Ask BreatheSafe</h2>
-          <p className="section-copy">Get a clear next step based on the selected place, conditions, and resident profile.</p>
+          <p className="section-copy">Ask about exercise, commuting, or the air inside your home.</p>
         </div>
-        <span className="model-chip" title="Model credentials stay server-side; deterministic guidance remains available offline">
-          <span className="status-dot" aria-hidden="true" /> {provider.providerName}
-        </span>
       </div>
 
       <div className="quick-question-list" aria-label="Suggested questions">
@@ -56,6 +53,23 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
         ))}
       </div>
 
+      <div className="conversation" role="log" aria-label="Conversation">
+      {turns.map(({ question: asked, reply }, index) => (
+        <div className="conversation-turn" key={index}>
+          <p className="question-bubble">{asked}</p>
+          <div className="assistant-answer">
+            <span className="reply-source">{reply.source === 'genai' ? 'GenAI explanation' : 'Rule-based guidance'}</span>
+            <p className="answer-lead">{reply.answer}</p>
+            <div className="answer-grid">
+              <div><h3>Do this next</h3><ul>{reply.keyActions.map((action) => <li key={action}>{action}</li>)}</ul></div>
+              <div><h3>Why it matters</h3><p>{reply.whyItMatters}</p></div>
+            </div>
+            <p className="safety-note">{reply.safetyNote}</p>
+            <p className="source-note">{reply.sourceGuidance}</p>
+          </div>
+        </div>
+      ))}
+      </div>
       <form
         className="assistant-form"
         onSubmit={(event) => {
@@ -68,6 +82,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
           id="assistant-question"
           className="form-input assistant-input"
           value={question}
+          maxLength={500}
           onChange={(event) => setQuestion(event.target.value)}
           placeholder="e.g. Can my child play outside after school?"
         />
@@ -78,28 +93,6 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
 
       {providerError && <p className="assistant-error" role="alert">{providerError}</p>}
 
-      {reply && (
-        <div className="assistant-answer" role="status" aria-live="polite">
-          <div className="answer-lead">
-            <span className="answer-icon" aria-hidden="true">✦</span>
-            <p>{reply.answer}</p>
-          </div>
-          <div className="answer-grid">
-            <div>
-              <h3>Do this next</h3>
-              <ul>
-                {reply.keyActions.map((action) => <li key={action}>{action}</li>)}
-              </ul>
-            </div>
-            <div>
-              <h3>Why it matters</h3>
-              <p>{reply.whyItMatters}</p>
-            </div>
-          </div>
-          <p className="safety-note"><strong>Safety boundary:</strong> {reply.safetyNote}</p>
-          <p className="source-note">Guidance basis: {reply.sourceGuidance}</p>
-        </div>
-      )}
     </section>
   );
 };

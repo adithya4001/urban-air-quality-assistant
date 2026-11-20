@@ -15,7 +15,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
       <nav className="landing-nav-links" aria-label="Welcome navigation">
         <a href="#why-breathesafe">Why BreatheSafe</a>
         <a href="#how-it-works">How it works</a>
-        <button className="landing-signin-link" type="button" onClick={onSignIn}>Sign in</button>
+        <button className="landing-signin-link" type="button" onClick={onSignIn}>Open workspace</button>
       </nav>
     </header>
 
@@ -50,7 +50,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
           <div className="visual-orbit visual-orbit-one" aria-hidden="true" />
           <div className="visual-orbit visual-orbit-two" aria-hidden="true" />
           <div className="air-glass-card">
-            <div className="air-card-topline"><span className="live-tag"><span className="pulse-dot" aria-hidden="true" /> LIVE SNAPSHOT</span><span>07:42 AM</span></div>
+            <div className="air-card-topline"><span className="live-tag">EXAMPLE AIR REPORT</span><span>07:42 AM</span></div>
             <div className="air-card-location"><span className="location-pin" aria-hidden="true">⌖</span><div><strong>Delhi, India</strong><small>Cold air · low wind · urban basin</small></div></div>
             <div className="air-score-row"><div><small className="metric-caption">CURRENT AQI</small><strong className="air-score-number">164</strong><span className="air-score-status">Unhealthy</span></div><div className="air-ring" aria-hidden="true"><span>PM<br />2.5</span></div></div>
             <div className="decision-divider" />

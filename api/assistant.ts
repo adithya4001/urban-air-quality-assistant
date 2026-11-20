@@ -94,13 +94,6 @@ function deterministicReply(question: string, context: AssistantContext): Assist
 function safeContext(context: AssistantContext) {
   return {
     location: context.plan.location,
-    profile: {
-      ageGroup: context.profile.ageGroup,
-      healthConditions: context.profile.healthConditions,
-      lifestyle: context.profile.lifestyle,
-      hasAirPurifier: context.profile.hasAirPurifier,
-      hasN95Masks: context.profile.hasN95Masks,
-    },
     airQuality: context.airQuality,
     weather: context.weather,
     overallRisk: context.plan.overallRisk,
@@ -119,6 +112,7 @@ function safeContext(context: AssistantContext) {
 async function explainWithGateway(question: string, context: AssistantContext, token: string, model: string) {
   const response = await fetch(GATEWAY_URL, {
     method: 'POST',
+    signal: AbortSignal.timeout(18000),
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -126,7 +120,7 @@ async function explainWithGateway(question: string, context: AssistantContext, t
     body: JSON.stringify({
       model,
       temperature: 0.2,
-      max_tokens: 450,
+      max_tokens: 900,
       response_format: {
         type: 'json_schema',
         json_schema: {
@@ -185,6 +179,7 @@ export default {
       return json({ error: 'Request body must be valid JSON' }, 400);
     }
 
+    if (!body || typeof body !== 'object') return json({ error: 'Request body must be an object' }, 400);
     const candidate = body as { question?: unknown; context?: unknown };
     if (typeof candidate.question !== 'string' || candidate.question.trim().length === 0 || candidate.question.length > 500) {
       return json({ error: 'Question must be a non-empty string of at most 500 characters' }, 400);

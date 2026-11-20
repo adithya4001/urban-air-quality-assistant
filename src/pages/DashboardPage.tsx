@@ -151,7 +151,7 @@ export const DashboardPage: React.FC = () => {
     <main id="main-content" className="main-content resident-dashboard" tabIndex={-1}>
       <header className="workspace-summary">
         <div>
-          <h1>Your air dashboard</h1>
+          <h1>Your air today</h1>
           <p>{selectedLocation.name}, {selectedLocation.country}</p>
         </div>
         {currentPlan && (
@@ -185,8 +185,16 @@ export const DashboardPage: React.FC = () => {
             <p className="workspace-loading" role="status">Some conditions use sample data. <button type="button" className="workspace-text-button" onClick={() => setView('insights')}>Check data sources</button></p>
           )}
 
-          <div hidden={view !== 'chat'}>
+          <div className="workspace-chat" hidden={view !== 'chat'}>
             {assistantContext && <AssistantPanel key={currentPlan?.generatedAt} context={assistantContext} />}
+            {currentPlan?.recommendations[0] && (
+              <aside className="next-action" aria-labelledby="next-action-title">
+                <h2 id="next-action-title">Start here</h2>
+                <strong>{currentPlan.recommendations[0].title}</strong>
+                <p>{currentPlan.recommendations[0].summary}</p>
+                <button type="button" onClick={() => setView('plan')}>See your full plan <span aria-hidden="true">↗</span></button>
+              </aside>
+            )}
           </div>
 
           {view === 'plan' && currentPlan && (

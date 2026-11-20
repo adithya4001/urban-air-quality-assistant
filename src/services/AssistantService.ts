@@ -14,7 +14,7 @@ export class DemoAssistantProvider implements IAssistantProvider {
   public readonly providerName = 'BreatheSafe deterministic safety fallback';
 
   public async ask(question: string, context: AssistantContext): Promise<AssistantReply> {
-    return buildAssistantReply(question, context);
+    return { ...buildAssistantReply(question, context), source: 'rules' };
   }
 }
 
@@ -44,7 +44,11 @@ export class RemoteAssistantProvider implements IAssistantProvider {
     if (!response.ok) throw new Error(`Assistant endpoint returned ${response.status}`);
     const payload: unknown = await response.json();
     if (!isAssistantReply(payload)) throw new Error('Assistant endpoint returned an invalid reply');
-    return payload;
+    return {
+      ...payload,
+      source: response.headers.get('X-BreatheSafe-Source') === 'ai-gateway-with-deterministic-guardrails'
+        ? 'genai' : 'rules',
+    };
   }
 }
 

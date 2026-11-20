@@ -14,6 +14,7 @@ export type AssistantIntent =
   | 'impact';
 
 export interface AssistantReply {
+  source?: 'genai' | 'rules';
   intent: AssistantIntent;
   answer: string;
   keyActions: string[];
