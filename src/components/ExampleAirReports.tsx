@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+const rotationInterval = 6500;
 
 const reports = [
   {
@@ -12,8 +14,6 @@ const reports = [
     title: 'Swap the morning run',
     action: 'Move your run indoors if you can.',
     reason: 'Hard exercise increases the amount of polluted air you breathe.',
-    icon: '↗',
-    tone: 'amber',
   },
   {
     scenario: 'School drop-off',
@@ -26,8 +26,6 @@ const reports = [
     title: 'Keep the school run short',
     action: 'Use a quieter drop-off route where available.',
     reason: 'Less time near idling traffic can reduce roadside exposure.',
-    icon: '⌂',
-    tone: 'orange',
   },
   {
     scenario: 'Evening commute',
@@ -40,19 +38,42 @@ const reports = [
     title: 'Take the bus if it suits your route',
     action: 'Walk to the stop on a quieter street if one is available.',
     reason: 'Shared trips can reduce emissions compared with driving alone.',
-    icon: '⇄',
-    tone: 'green',
   },
 ] as const;
 
 export function ExampleAirReports() {
   const [{ active, previous }, setDeck] = useState({ active: 0, previous: -1 });
+  const [playing, setPlaying] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const rotating = playing && !hovered && !focused;
+
   const selectReport = (index: number) => {
     setDeck((deck) => index === deck.active ? deck : { active: index, previous: deck.active });
   };
+  const step = (direction: number) => selectReport((active + direction + reports.length) % reports.length);
+
+  useEffect(() => {
+    if (!rotating) return;
+    const timer = window.setInterval(() => {
+      if (document.hidden) return;
+      setDeck(({ active: index }) => ({ active: (index + 1) % reports.length, previous: index }));
+    }, rotationInterval);
+    return () => window.clearInterval(timer);
+  }, [rotating, active]);
 
   return (
-    <section className="landing-hero-visual report-deck" aria-label="Example VaayuDootha air reports">
+    <section
+      className="landing-hero-visual report-deck"
+      aria-label="Example VaayuDootha air reports"
+      data-playing={playing}
+      onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(true); }}
+      onPointerLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
+      }}
+    >
       <div className="visual-orbit visual-orbit-one" aria-hidden="true" />
       <div className="visual-orbit visual-orbit-two report-orbit" role="group" aria-label="Choose an example report">
         {reports.map(({ scenario }, index) => (
@@ -69,13 +90,12 @@ export function ExampleAirReports() {
         ))}
       </div>
 
-      <div className="report-stack" aria-live="polite" aria-atomic="true">
+      <div className="report-stack" aria-live={rotating ? 'off' : 'polite'} aria-atomic="true">
         {reports.map((report, index) => (
           <article
             key={report.scenario}
             className="air-glass-card report-card"
             data-state={active === index ? 'active' : previous === index ? 'outgoing' : 'idle'}
-            data-tone={report.tone}
             aria-hidden={active !== index}
           >
             <div className="air-card-topline"><span className="live-tag">EXAMPLE AIR REPORT</span><span>{report.time}</span></div>
@@ -86,7 +106,7 @@ export function ExampleAirReports() {
             <div className="air-score-row">
               <div>
                 <small className="metric-caption">SAMPLE US AQI</small>
-                <strong className="air-score-number">{report.aqi}</strong>
+                <span className="air-score-number">{report.aqi}</span>
                 <span className="air-score-status">{report.status}</span>
               </div>
               <div className="air-ring" aria-label="PM2.5"><span aria-hidden="true">PM<br />2.5</span></div>
@@ -94,7 +114,6 @@ export function ExampleAirReports() {
             <div className="decision-divider" />
             <p className="decision-label">YOUR NEXT BEST MOVE</p>
             <div className="decision-main">
-              <span className="decision-icon" aria-hidden="true">{report.icon}</span>
               <div><strong>{report.title}</strong><span>{report.action}</span></div>
             </div>
             <p className="report-reason">{report.reason}</p>
@@ -102,13 +121,16 @@ export function ExampleAirReports() {
         ))}
       </div>
 
-      <span className="floating-chip chip-weather" aria-hidden="true">☁ {reports[active].weather}</span>
-      <div className="report-controls">
-        <span>{reports[active].scenario} · {active + 1} / {reports.length}</span>
-        <button type="button" onClick={() => selectReport((active + 1) % reports.length)}>
-          Next report <span aria-hidden="true">→</span>
-        </button>
-      </div>
+      <span className="floating-chip chip-weather" aria-hidden="true">{reports[active].weather}</span>
+      <button className="report-arrow report-prev" type="button" aria-label="Previous report" onClick={() => step(-1)}>
+        <span aria-hidden="true">‹</span>
+      </button>
+      <button className="report-arrow report-next" type="button" aria-label="Next report" onClick={() => step(1)}>
+        <span aria-hidden="true">›</span>
+      </button>
+      <button className="report-playback" type="button" onClick={() => setPlaying((value) => !value)}>
+        {playing ? 'Pause' : 'Play'}
+      </button>
     </section>
   );
 }

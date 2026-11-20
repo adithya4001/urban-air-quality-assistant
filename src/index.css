@@ -270,13 +270,19 @@ a { color: inherit; }
 .chip-family { bottom: 13%; left: 2%; }
 
 /* Interactive example air reports */
-.landing-hero .report-deck { min-height: 520px; isolation: isolate; }
-.report-deck .visual-orbit-one { width: min(100%, 480px); pointer-events: none; }
+.landing-hero .report-deck { min-height: 560px; isolation: isolate; }
+.report-deck .visual-orbit-one {
+  width: min(calc(100% - 8px), 565px);
+  height: 435px;
+  transform: rotate(-27deg);
+  pointer-events: none;
+}
 .report-deck .report-orbit {
-  z-index: 3;
-  width: min(calc(100% - 20px), 580px);
-  height: 440px;
-  transform: rotate(16deg);
+  z-index: 1;
+  width: min(calc(100% - 12px), 560px);
+  height: 504px;
+  border-color: rgb(62 103 93 / .29);
+  transform: rotate(21deg);
   pointer-events: none;
 }
 .report-dot {
@@ -309,8 +315,9 @@ a { color: inherit; }
 .report-dot[aria-pressed="true"] span { animation: report-dot-glow 1.8s ease-in-out 2; }
 .report-stack {
   position: relative;
+  z-index: 2;
   display: grid;
-  width: min(365px, calc(100% - 62px));
+  width: min(365px, calc(100% - 82px));
   isolation: isolate;
 }
 .report-stack::before {
@@ -339,8 +346,7 @@ a { color: inherit; }
   z-index: 1;
   animation: report-back .42s ease both;
 }
-.report-card[data-tone="orange"] .decision-icon { background: #f6e1c8; }
-.report-card[data-tone="green"] .decision-icon { background: #dce9de; }
+.report-card .air-score-number { font-weight: 500; letter-spacing: -.06em; }
 .report-reason {
   margin-top: 14px;
   border-top: 1px solid #dce8e2;
@@ -349,31 +355,62 @@ a { color: inherit; }
   font-size: .74rem;
   line-height: 1.45;
 }
-.report-deck .chip-weather { z-index: 2; top: 12%; right: 0; pointer-events: none; }
-.report-controls {
+.report-deck .chip-weather { z-index: 3; top: 10%; right: 0; pointer-events: none; }
+.report-arrow, .report-playback {
   position: absolute;
   z-index: 4;
-  right: 12px;
-  bottom: 0;
-  left: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px 16px;
-  flex-wrap: wrap;
-  color: #315a58;
-  font-size: .78rem;
-}
-.report-controls button {
-  min-height: 44px;
-  border: 1px solid #acc9bd;
+  border: 1px solid rgb(153 112 54 / .24);
   border-radius: 99px;
-  padding: 6px 13px;
-  color: #245b53;
-  background: #fdfbf2;
-  font-weight: 600;
+  color: #5c4021;
+  background: #f8eed5;
 }
-.report-controls button:hover { background: #e4f3eb; }
+.report-arrow {
+  display: grid;
+  place-items: center;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  padding: 0 0 4px;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  line-height: 1;
+}
+.report-prev { left: 0; }
+.report-next { right: 0; }
+.report-playback {
+  top: 4px;
+  left: 50%;
+  min-width: 64px;
+  min-height: 36px;
+  padding: 4px 12px;
+  transform: translateX(-50%);
+  font-size: .75rem;
+}
+.report-arrow:hover, .report-playback:hover { background: #ffdfa4; }
+@supports (offset-path: ellipse(50% 50% at 50% 50%)) {
+  .report-dot:nth-child(n) {
+    top: 0;
+    left: 0;
+    transform: none;
+    offset-path: ellipse(50% 50% at 50% 50%);
+    offset-rotate: 0deg;
+    offset-anchor: center;
+    offset-distance: var(--orbit-start);
+  }
+  .report-dot:nth-child(1) { --orbit-start: 9%; }
+  .report-dot:nth-child(2) { --orbit-start: 43%; }
+  .report-dot:nth-child(3) { --orbit-start: 76%; }
+  .report-deck[data-playing="true"] .report-dot { animation: report-orbit-travel 16s linear infinite; }
+  .report-orbit:hover .report-dot, .report-orbit:focus-within .report-dot { animation-play-state: paused; }
+}
+@keyframes report-orbit-travel {
+  from { offset-distance: var(--orbit-start); }
+  to { offset-distance: calc(var(--orbit-start) + 100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .report-deck[data-playing="true"] .report-dot { animation: none; }
+  .report-dot[aria-pressed="true"] span { animation: none; }
+}
 @keyframes report-forward {
   from { opacity: 0; transform: translate(16px, 13px) scale(.94); }
   to { opacity: 1; transform: translate(0, 0) scale(1); }
@@ -386,10 +423,14 @@ a { color: inherit; }
   50% { box-shadow: 0 0 0 7px rgb(181 97 45 / .16), 0 0 23px #ffd385; }
 }
 @media (max-width: 650px) {
-  .landing-hero .report-deck { min-height: 540px; }
-  .report-deck .report-orbit { height: 440px; transform: none; }
-  .report-deck .chip-weather { top: 4%; }
+  .landing-hero .report-deck { min-height: 550px; }
+  .report-deck .report-orbit { height: 492px; transform: rotate(7deg); }
+  .report-deck .visual-orbit-one { height: 464px; transform: rotate(-12deg); }
+  .report-deck .chip-weather { top: 7%; }
+  .report-stack { width: min(365px, calc(100% - 52px)); }
   .report-stack .report-card { padding: 17px; }
+  .report-prev { left: -8px; }
+  .report-next { right: -8px; }
 }
 .landing-proof-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; width: min(1120px, calc(100% - 44px)); margin: -40px auto 0; position: relative; z-index: 2; border: 1px solid #c8e6df; border-radius: 18px; overflow: hidden; background: #ffffff; box-shadow: 0 16px 35px rgb(9 66 68 / .1); color: #123b40; }
 .landing-proof-row > div { display: flex; align-items: center; gap: 11px; padding: 19px 22px; background: #ffffff; }
