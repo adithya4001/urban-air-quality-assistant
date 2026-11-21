@@ -164,7 +164,6 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
     <main id="main-content" className={`main-content resident-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} tabIndex={-1}>
       <button className="sidebar-toggle" aria-label={sidebarOpen ? 'Close menu' : 'Open menu'} aria-expanded={sidebarOpen} aria-controls="daily-sidebar" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
       <nav id="daily-sidebar" className="daily-sidebar" aria-label="Main navigation" hidden={!sidebarOpen}>
-        <button className="sidebar-brand" onClick={() => setView('home')}><span>◒</span> VaayuDootha</button>
         <p>YOUR AIR COMPANION</p>
         {views.filter(({id}) => id !== 'settings').map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
       </nav>

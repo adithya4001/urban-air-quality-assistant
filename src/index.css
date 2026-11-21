@@ -765,3 +765,5 @@ a { color: inherit; }
 .flip-audience-grid[data-visible="true"] .daily-flip-inner:not([data-manual]){animation:audience-sequence 8s ease-in-out infinite backwards}
 @keyframes audience-sequence{0%,37.5%{transform:rotateY(0deg)}43%,80%{transform:rotateY(180deg)}85.5%,100%{transform:rotateY(360deg)}}
 @media(prefers-reduced-motion:reduce){.flip-audience-grid[data-visible="true"] .daily-flip-inner:not([data-manual]){animation:none}}
+/* Keep the navigation toggle beside the brand in the top bar. */
+.app-container .site-header .header-inner{padding-left:66px}.sidebar-toggle{position:absolute;top:-54px;left:16px;z-index:10}.daily-sidebar{padding-top:28px}.daily-sidebar>p:first-child{margin-top:0}@media(max-width:800px){.app-container .site-header .header-inner{padding-left:58px}.sidebar-toggle{position:absolute;top:-54px;left:10px}.daily-sidebar{padding-top:28px}}
