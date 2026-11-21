@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ExampleAirReports } from '../components/ExampleAirReports';
 import { AirDecisionFlow } from '../components/AirDecisionFlow';
 import { AudienceCards } from '../components/AudienceCards';
@@ -9,19 +9,8 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo }) => {
-  const [dark, setDark] = useState(() => {
-    try { return window.localStorage.getItem('vaayudootha.welcomeTheme') === 'dark'; }
-    catch { return false; }
-  });
-
-  const toggleTheme = () => {
-    const next = !dark;
-    setDark(next);
-    try { window.localStorage.setItem('vaayudootha.welcomeTheme', next ? 'dark' : 'light'); } catch { /* Optional preference. */ }
-  };
-
   return (
-  <div className="landing-page" data-landing-theme={dark ? 'dark' : 'light'}>
+  <div className="landing-page">
     <header className="landing-nav" role="banner">
       <a className="landing-brand" href="#welcome" aria-label="VaayuDootha welcome">
         <span className="landing-brand-mark" aria-hidden="true">◒</span>
@@ -30,9 +19,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
       <nav className="landing-nav-links" aria-label="Welcome navigation">
         <a href="#why-breathesafe">Why VaayuDootha</a>
         <a href="#how-it-works">How it works</a>
-        <button className="landing-theme-toggle" type="button" onClick={toggleTheme} aria-label="Dark mode" aria-pressed={dark}>
-          <span aria-hidden="true">{dark ? '☾' : '☀'}</span><span>{dark ? 'Dark' : 'Light'}</span>
-        </button>
         <button className="landing-signin-link" type="button" onClick={onSignIn}>Login</button>
       </nav>
     </header>
