@@ -13,15 +13,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onStartPlan 
   <div className="landing-page new-home">
     <header className="landing-nav" role="banner">
       <a className="landing-brand" href="#home"><span className="landing-brand-mark" aria-hidden="true">◒</span><span><strong>VaayuDootha</strong><small>Urban air decisions, made human</small></span></a>
-      <nav className="landing-nav-links" aria-label="Main navigation"><a href="#who">Who it helps</a><a href="#workflow">How it works</a><button className="landing-signin-link" onClick={onSignIn}>Sign in</button></nav>
+      <nav className="landing-nav-links" aria-label="Main navigation"><a href="#who">Why VaayuDootha</a><a href="#workflow">How it works</a><button className="landing-signin-link" onClick={onSignIn}>Login</button></nav>
     </header>
     <main id="home">
-      <section className="landing-hero new-home-hero" aria-labelledby="landing-title">
-        <img className="new-home-photo" src="https://images.pexels.com/photos/2792605/pexels-photo-2792605.jpeg?auto=compress&cs=tinysrgb&w=2200" alt="Misty winter morning over a city skyline" fetchPriority="high" />
-        <div className="new-home-shade" />
-        <div className="new-home-copy"><p className="landing-kicker">WINTER AIR, MADE EASIER</p><h1 id="landing-title">A clearer plan<br/>for a hazy day.</h1><p>VaayuDootha brings air quality, winter weather and your real routine together, then helps you choose a practical next step.</p><div className="landing-hero-actions"><button className="landing-primary-button" onClick={onStartPlan}>Build my daily plan <span>↗</span></button><a className="landing-ghost-button" href="#workflow">See how it works ↓</a></div><div className="new-home-tags"><span>Weather + AQI</span><span>Your routine</span><span>Explainable guidance</span></div></div>
-        <div className="new-home-report"><ExampleAirReports /></div>
-        <a className="new-home-scroll" href="#who">SCROLL TO EXPLORE <span>↓</span></a>
+      <section className="landing-hero" aria-labelledby="landing-title">
+        <div className="landing-sun-flare" aria-hidden="true" />
+        <div className="landing-cloud cloud-left" aria-hidden="true">☁︎</div>
+        <div className="landing-cloud cloud-right" aria-hidden="true">☁︎</div>
+        <div className="landing-light-streak" aria-hidden="true" />
+        <div className="landing-hero-copy">
+          <p className="landing-kicker"><span className="pulse-dot" aria-hidden="true" /> WINTER AIR DECISION COMPANION</p>
+          <h1 id="landing-title"><span>Know the air.</span> <span>Choose your</span> <span>next move.</span></h1>
+          <p className="landing-lede">VaayuDootha turns pollution, weather, location, and your everyday routine into calm, practical guidance for safer days outside and cleaner air inside.</p>
+          <div className="landing-hero-actions"><button className="landing-primary-button" type="button" onClick={onStartPlan}>Build my air plan <span aria-hidden="true">↗</span></button><button className="landing-ghost-button" type="button" onClick={onStartPlan}>Explore the demo</button></div>
+          <p className="landing-note">Personalized for residents, families, commuters, and outdoor-active people.</p>
+        </div>
+        <ExampleAirReports />
       </section>
       <section className="new-home-intro" id="who"><div><p className="landing-kicker dark-kicker">MADE FOR YOUR KIND OF DAY</p><h2>Different lives.<br/>Different air decisions.</h2></div><p>One AQI reading does not affect every person or routine in the same way. Start with the people and plans that matter to you.</p></section>
       <section className="new-home-audiences" aria-label="Who VaayuDootha helps">{audiences.map((item, i) => <article className={`new-audience-card audience-${i+1}`} key={item.title}><div className="new-audience-image"><span>{item.icon}</span><small>VAAYUDOOTHA · EVERYDAY AIR GUIDE</small></div><div className="new-audience-copy"><span className="new-card-number">0{i+1}</span><h3>{item.title}</h3><p>{item.text}</p><a href="#workflow">Explore your plan <span>↗</span></a></div></article>)}</section>
