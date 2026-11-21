@@ -1,6 +1,7 @@
 import React from 'react';
 import { ExampleAirReports } from '../components/ExampleAirReports';
 import { AirDecisionFlow } from '../components/AirDecisionFlow';
+import { AudienceCards } from '../components/AudienceCards';
 
 interface LandingPageProps {
   onSignIn: () => void;
@@ -68,11 +69,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
 
       <section id="how-it-works" className="landing-use-section" aria-labelledby="use-title">
         <div className="landing-section-heading"><p className="landing-kicker dark-kicker">MADE FOR REAL LIFE</p><h2 id="use-title">A small check-in before the day begins.</h2><p>Whether you are stepping out, planning a school run, or choosing a workout, the assistant gives you a practical plan in seconds.</p></div>
-        <div className="audience-grid">
-          <article className="audience-card audience-card-featured"><span className="audience-emoji" aria-hidden="true">🏃</span><h3>Outdoor-active people</h3><p>Know whether to run, walk, cycle, or move today’s activity indoors.</p><span className="audience-link">Time your exposure better ↗</span></article>
-          <article className="audience-card"><span className="audience-emoji" aria-hidden="true">👨‍👩‍👧</span><h3>Families</h3><p>Protect the most sensitive person at home with a shared, calmer routine.</p><span className="audience-link">Plan the day together ↗</span></article>
-          <article className="audience-card"><span className="audience-emoji" aria-hidden="true">🚇</span><h3>Everyday commuters</h3><p>Compare practical travel choices and reduce roadside exposure and emissions.</p><span className="audience-link">Choose a cleaner route ↗</span></article>
-        </div>
+        <AudienceCards />
       </section>
 
       <section className="landing-cta-section" aria-labelledby="cta-title"><div><p className="landing-kicker">YOUR DAY, WITH MORE CLARITY</p><h2 id="cta-title">Start with the air around you.</h2><p>Your first plan takes less than a minute. The guidance gets smarter as your context gets clearer.</p></div><button className="landing-primary-button light-button" type="button" onClick={onSignIn}>Enter VaayuDootha <span aria-hidden="true">↗</span></button></section>
