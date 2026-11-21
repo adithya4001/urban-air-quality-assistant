@@ -5,10 +5,9 @@ import { AudienceCards } from '../components/AudienceCards';
 
 interface LandingPageProps {
   onSignIn: () => void;
-  onTryDemo: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
   return (
   <div className="landing-page">
     <header className="landing-nav" role="banner">
@@ -49,7 +48,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
           </p>
           <div className="landing-hero-actions">
             <button className="landing-primary-button" type="button" onClick={onSignIn}>Build my air plan <span aria-hidden="true">↗</span></button>
-            <button className="landing-ghost-button" type="button" onClick={onTryDemo}>Explore the demo</button>
           </div>
           <p className="landing-note">Personalized for residents, families, commuters, and outdoor-active people.</p>
         </div>

@@ -3,12 +3,11 @@ import React, { useState } from 'react';
 interface AuthPageProps {
   onBack: () => void;
   onAuthenticated: (profile: { name: string; email: string }) => void;
-  onTryDemo: () => void;
 }
 
 type Mode = 'login' | 'register' | 'forgot';
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onTryDemo }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
   const [mode, setMode] = useState<Mode>('login');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,7 +29,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onTryDemo }) => {
       setError('Passwords do not match.');
       return;
     }
-    setError('Account login is not connected yet. You can explore as a guest.');
+    setError('Account service is not connected yet. Please try again later.');
   }
 
   return (
@@ -53,7 +52,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onTryDemo }) => {
               <button className={mode === 'register' ? 'auth-tab active' : 'auth-tab'} type="button" aria-pressed={mode === 'register'} onClick={() => changeMode('register')}>Register</button>
             </div>
           )}
-          <p className="auth-subtitle" role="status">Account service is not connected yet. Guest access is available below.</p>
+          <p className="auth-subtitle" role="status">Account service is not connected yet.</p>
           <form className="auth-form" onSubmit={submit}>
             {mode === 'register' && (
               <div className="auth-field"><label htmlFor="auth-name">Full name</label><input id="auth-name" autoComplete="name" maxLength={100} value={name} onChange={(event) => setName(event.target.value)} required /></div>
@@ -76,7 +75,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack, onTryDemo }) => {
             <button className="auth-submit" type="submit">{mode === 'forgot' ? 'Send reset link' : mode === 'register' ? 'Create account' : 'Login'}</button>
           </form>
           {mode === 'forgot' && <button className="forgot-button" type="button" onClick={() => changeMode('login')}>Back to login</button>}
-          {<><div className="auth-divider"><span>or</span></div><button className="demo-access-button" type="button" onClick={onTryDemo}>Explore as a guest</button></>}
         </div>
       </section>
     </main>
