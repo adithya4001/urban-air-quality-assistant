@@ -80,7 +80,7 @@ function persist(key: string, value: unknown) {
   }
 }
 
-export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: number }> = ({ initialView, settingsRequest }) => {
+export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ initialView, settingsRequest, sidebarOpen, setSidebarOpen }) => {
   const environmentService = useMemo(
     () => new EnvironmentService(
       new OpenMeteoAirQualityProvider(),
@@ -92,7 +92,6 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
   const [userProfile, setUserProfile] = useState<UserProfile>(getStoredProfile);
   const [view, setView] = useState<View>(initialView ?? 'home');
   const [setupOpen, setSetupOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   useEffect(() => { if (settingsRequest) setView('settings'); }, [settingsRequest]);
   const [approvedPlan, setApprovedPlan] = useState<DailyPlan | null>(null);
   const [forceFallback, setForceFallback] = useState(false);
@@ -162,7 +161,6 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
 
   return (
     <main id="main-content" className={`main-content resident-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} tabIndex={-1}>
-      <button className="sidebar-toggle" aria-label={sidebarOpen ? 'Close menu' : 'Open menu'} aria-expanded={sidebarOpen} aria-controls="daily-sidebar" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
       <nav id="daily-sidebar" className="daily-sidebar" aria-label="Main navigation" hidden={!sidebarOpen}>
         <p>YOUR AIR COMPANION</p>
         {views.filter(({id}) => id !== 'settings').map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}

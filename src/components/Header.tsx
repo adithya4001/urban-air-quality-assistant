@@ -4,11 +4,14 @@ interface HeaderProps {
   profile: { name: string; email: string };
   onExit: () => void;
   onSettings?: () => void;
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ profile, onExit, onSettings }) => (
+export const Header: React.FC<HeaderProps> = ({ profile, onExit, onSettings, sidebarOpen, onToggleSidebar }) => (
   <header className="site-header">
     <div className="header-inner">
+      <button type="button" className="header-menu-toggle" aria-label={sidebarOpen ? 'Close menu' : 'Open menu'} aria-expanded={sidebarOpen} aria-controls="daily-sidebar" onClick={onToggleSidebar}>☰</button>
       <a className="brand-lockup" href="#main-content" aria-label="VaayuDootha home">
         <span className="brand-mark" aria-hidden="true">◒</span>
         <strong>VaayuDootha</strong>
