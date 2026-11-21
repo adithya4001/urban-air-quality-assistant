@@ -18,6 +18,8 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
   const [turns, setTurns] = useState<Array<{ question: string; reply: AssistantReply }>>([]);
   const [isAsking, setIsAsking] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
+  const [remindersOn, setRemindersOn] = useState(false);
+  const [reminderTime, setReminderTime] = useState('07:00');
   const provider = useMemo(() => createAssistantProvider(), []);
 
   const ask = async (value = question) => {
@@ -43,6 +45,20 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
           <h2 id="assistant-title" className="card-title">Ask VaayuDootha</h2>
           <p className="section-copy">Ask about exercise, commuting, or the air inside your home.</p>
         </div>
+      </div>
+
+      <div className="assistant-reminders">
+        <div><strong>Daily air check-in</strong><small>Reminder in this browser at your chosen time</small></div>
+        <input aria-label="Reminder time" type="time" value={reminderTime} onChange={event => setReminderTime(event.target.value)} disabled={!remindersOn} />
+        <button type="button" className={remindersOn ? 'reminder-toggle active' : 'reminder-toggle'} onClick={async () => {
+          if (remindersOn) { setRemindersOn(false); window.clearInterval(Number(localStorage.getItem('vaayudootha.reminder.timer'))); localStorage.removeItem('vaayudootha.reminder.timer'); return; }
+          if (!('Notification' in window)) return;
+          const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+          if (permission !== 'granted') return;
+          setRemindersOn(true);
+          const schedule = () => { const [hours, minutes] = reminderTime.split(':').map(Number); const now = new Date(); const next = new Date(); next.setHours(hours, minutes, 0, 0); if(next<=now)next.setDate(next.getDate()+1); window.setTimeout(()=>new Notification('VaayuDootha air check-in',{body:'Check today’s air conditions and review your personal plan.'}),next.getTime()-now.getTime()); };
+          schedule(); const timer=window.setInterval(schedule,86400000); localStorage.setItem('vaayudootha.reminder.timer',String(timer));
+        }}>{remindersOn ? 'On' : 'Enable reminder'}</button>
       </div>
 
       <div className="quick-question-list" aria-label="Suggested questions">

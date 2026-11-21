@@ -76,7 +76,7 @@ function persist(key: string, value: unknown) {
   }
 }
 
-export const DashboardPage: React.FC = () => {
+export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView }) => {
   const environmentService = useMemo(
     () => new EnvironmentService(
       new OpenMeteoAirQualityProvider(),
@@ -86,7 +86,7 @@ export const DashboardPage: React.FC = () => {
   );
   const [selectedLocation, setSelectedLocation] = useState<Location>(getStoredLocation);
   const [userProfile, setUserProfile] = useState<UserProfile>(getStoredProfile);
-  const [view, setView] = useState<View>('chat');
+  const [view, setView] = useState<View>(initialView ?? 'chat');
   const [forceFallback, setForceFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | 'all'>('all');
   const [dailyPlan, setDailyPlan] = useState<DailyPlan | null>(null);
