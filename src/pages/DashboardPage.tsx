@@ -16,6 +16,7 @@ import { OpenMeteoWeatherProvider } from '../services/OpenMeteoWeatherProvider';
 import { getRiskLevelLabel } from '../utils/formatters';
 import { DailySetup } from '../components/DailySetup';
 import { DailyAudienceCards } from '../components/DailyAudienceCards';
+import { PrecautionCenter } from '../components/PrecautionCenter';
 
 const views = [
   { id: 'home', label: 'Home' },
@@ -23,6 +24,7 @@ const views = [
   { id: 'insights', label: 'Weather & air insights' },
   { id: 'plan', label: 'Today’s approved plan' },
   { id: 'safety', label: 'Safety & sources' },
+  { id: 'precaution', label: 'Precaution centre' },
   { id: 'settings', label: 'Location & profile' },
 ] as const;
 type View = (typeof views)[number]['id'];
@@ -183,7 +185,7 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
         <div className="daily-hero"><img src="https://images.pexels.com/photos/2792605/pexels-photo-2792605.jpeg?auto=compress&cs=tinysrgb&w=2200" alt="Misty winter city at dawn"/><div className="daily-hero-overlay"/><div className="daily-hero-content"><span className="daily-eyebrow">WINTER AIR · YOUR DAY · YOUR ROUTINE</span><h2>A clearer plan for a hazy day.</h2><p>Bring your location, daily routine and local air conditions together. Get practical next steps you can ask questions about.</p><button className="daily-hero-button" onClick={()=>setSetupOpen(true)}>Build my daily plan ↗</button></div></div>
         <section className="daily-section"><div className="daily-section-heading"><div><span className="daily-eyebrow">WHO IT HELPS</span><h2>Made for the way you move through a day.</h2></div><p>Outdoor activities, family routines and daily commutes meet the same changing winter air in different ways.</p></div><DailyAudienceCards /></section>
         <section className="daily-workflow"><div><span className="daily-eyebrow">HOW YOUR PLAN COMES TOGETHER</span><h2>Context in.<br/>Clear actions out.</h2><p>Set up the parts of your day that matter. Then explore and adjust your plan in a conversation with the assistant.</p><button className="daily-outline-button" onClick={()=>setSetupOpen(true)}>Start your check-in →</button></div><div className="daily-steps">{[['01','Your personal context','Location, activities, hobbies and health sensitivities.'],['02','Your workday','Work location, days, hours and commute.'],['03','A daily air plan','AQI and weather inform practical actions for your routine.'],['04','Talk it through','Ask the agent questions and choose reminders.']].map(([n,t,d])=><article key={n}><b>{n}</b><div><h3>{t}</h3><p>{d}</p></div></article>)}</div></section>
-        <section className="daily-glossary"><span className="daily-eyebrow">AIR QUALITY, IN PLAIN WORDS</span><h2>Three terms worth knowing.</h2><div><article><b>AQI</b><p>An index that summarizes outdoor air pollution and potential health impact.</p></article><article><b>PM2.5</b><p>Fine particles small enough to travel deep into the lungs.</p></article><article><b>Winter inversion</b><p>A weather pattern that can trap cooler polluted air near the ground.</p></article></div></section>
+        <section className="precaution-intro"><div className="precaution-intro-heading"><div><span className="daily-eyebrow">CARE THROUGH THE COLD</span><h2>A little extra care for winter days.</h2></div><p>Explore practical precautions, understand when to seek care and find guidance for your questions.</p></div><div className="precaution-features">{[{title:'Understand your symptoms',text:'Learn when to speak with a healthcare professional about new or worsening symptoms.',image:'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=800'},{title:'Protect your breathing',text:'Find simple ways to reduce exposure to cold air, smoke and pollution.',image:'https://images.pexels.com/photos/3786157/pexels-photo-3786157.jpeg?auto=compress&cs=tinysrgb&w=800'},{title:'Care for your loved ones',text:'Consider the needs of children, older adults and people with existing conditions.',image:'https://images.pexels.com/photos/3768131/pexels-photo-3768131.jpeg?auto=compress&cs=tinysrgb&w=800'}].map(item=><article key={item.title}><img src={item.image} alt="" loading="lazy"/><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div><button className="daily-hero-button precaution-open" onClick={()=>{setView('precaution');window.scrollTo({top:0,behavior:'smooth'})}}>Explore precaution centre ↗</button></section>
         {setupOpen&&<DailySetup close={()=>setSetupOpen(false)} complete={()=>{setSetupOpen(false);setView('chat')}}/>}
       </section>}
 
@@ -280,6 +282,7 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
             </section>
           )}
           {view === 'safety' && <section className="card safety-sources"><h2>Safety & trusted sources</h2><p>Use today’s air and weather information to choose suitable precautions. Conditions can change during the day.</p><ul><li>Reduce strenuous outdoor activity when air quality is poor, particularly if you are sensitive to pollution.</li><li>Keep indoor air cleaner by limiting smoke and using filtration when available.</li><li>Follow your clinician’s existing advice for health conditions.</li></ul><h3>Weather updates and guidance</h3><p>Open these sources for current local warnings and news:</p><ul><li><a href="https://mausam.imd.gov.in/" target="_blank" rel="noreferrer">India Meteorological Department</a></li><li><a href="https://airquality.cpcb.gov.in/" target="_blank" rel="noreferrer">Central Pollution Control Board — air quality</a></li><li><a href="https://www.who.int/health-topics/air-pollution" target="_blank" rel="noreferrer">WHO — air pollution and health</a></li></ul></section>}
+          {view === 'precaution' && <PrecautionCenter />}
         </div>
       </div>
       <MedicalDisclaimer />
