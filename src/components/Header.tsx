@@ -19,8 +19,8 @@ export const Header: React.FC<HeaderProps> = ({ profile, onExit }) => (
         </summary>
         <div className="account-popover">
           <strong>{profile.name}</strong>
-          <p>{profile.email || 'Local browser session'}</p>
-          <button type="button" onClick={onExit}>Exit workspace</button>
+          <p>{profile.email}</p>
+          <button type="button" onClick={onExit}>Sign out</button>
         </div>
       </details>
     </div>
