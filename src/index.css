@@ -453,7 +453,7 @@ a { color: inherit; }
 .landing-proof-row small { position: relative; z-index: 1; margin-top: 3px; color: #496b6a; font-size: .75rem; line-height: 1.4; }
 .landing-story-section, .landing-use-section { width: min(1120px, calc(100% - 44px)); margin: 0 auto; color: #10373b; }
 .landing-atmosphere { position: relative; isolation: isolate; overflow: hidden; }
-.landing-atmosphere::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; height: 78%; background: url('./assets/morning-skyline.jpg') center bottom / cover no-repeat; opacity: .58; mask-image: linear-gradient(to bottom, transparent, black 23%, black 82%, transparent); pointer-events: none; }
+.landing-atmosphere::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; height: 72%; background: url('./assets/morning-skyline.jpg') center bottom / 100% 100% no-repeat; opacity: .62; mask-image: linear-gradient(to bottom, transparent, black 18%, black 90%, transparent); pointer-events: none; }
 .landing-story-section { position: relative; isolation: isolate; display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 70px; padding: 130px 0 105px; }
 .landing-story-section::after { content: ''; position: absolute; z-index: -1; top: 5%; left: -16vw; width: 85vw; height: 290px; border-radius: 50%; border-top: 1px solid rgb(67 121 95 / .26); box-shadow: 0 -10px 0 -9px rgb(67 121 95 / .22), 0 -20px 0 -19px rgb(67 121 95 / .17), 0 -30px 0 -29px rgb(67 121 95 / .13); transform: rotate(9deg); pointer-events: none; }
 .section-intro-block h2, .landing-section-heading h2 { margin-top: 10px; font-size: clamp(2rem, 4vw, 3.3rem); font-weight: 550; letter-spacing: -.065em; line-height: 1.05; }

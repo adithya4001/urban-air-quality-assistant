@@ -87,8 +87,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
         <div className="landing-section-heading"><p className="landing-kicker dark-kicker">MADE FOR REAL LIFE</p><h2 id="use-title">A small check-in before the day begins.</h2><p>Whether you are stepping out, planning a school run, or choosing a workout, the assistant gives you a practical plan in seconds.</p></div>
         <AudienceCards />
       </section>
-      </div>
-
       <section className="landing-cta-section" aria-labelledby="cta-title">
         <img className="landing-cta-photo" src="https://images.pexels.com/photos/4684392/pexels-photo-4684392.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="" loading="lazy" decoding="async" />
         <div className="landing-cta-copy">
@@ -98,6 +96,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
           <button className="landing-primary-button light-button" type="button" onClick={onSignIn}>Enter VaayuDootha <span aria-hidden="true">↗</span></button>
         </div>
       </section>
+      </div>
     </main>
 
   </div>
