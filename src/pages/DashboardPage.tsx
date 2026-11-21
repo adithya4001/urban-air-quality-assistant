@@ -14,8 +14,10 @@ import { MOCK_LOCATIONS } from '../services/mockData';
 import { OpenMeteoAirQualityProvider } from '../services/OpenMeteoAirQualityProvider';
 import { OpenMeteoWeatherProvider } from '../services/OpenMeteoWeatherProvider';
 import { getRiskLevelLabel } from '../utils/formatters';
+import { DailySetup } from '../components/DailySetup';
 
 const views = [
+  { id: 'home', label: 'Home' },
   { id: 'chat', label: 'Assistant' },
   { id: 'plan', label: 'Action plan' },
   { id: 'insights', label: 'Air insights' },
@@ -86,7 +88,8 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
   );
   const [selectedLocation, setSelectedLocation] = useState<Location>(getStoredLocation);
   const [userProfile, setUserProfile] = useState<UserProfile>(getStoredProfile);
-  const [view, setView] = useState<View>(initialView ?? 'chat');
+  const [view, setView] = useState<View>(initialView ?? 'home');
+  const [setupOpen, setSetupOpen] = useState(false);
   const [forceFallback, setForceFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | 'all'>('all');
   const [dailyPlan, setDailyPlan] = useState<DailyPlan | null>(null);
@@ -149,7 +152,7 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
 
   return (
     <main id="main-content" className="main-content resident-dashboard" tabIndex={-1}>
-      <header className="workspace-summary">
+      <header className={`workspace-summary ${view === 'home' ? 'dashboard-home-hidden' : ''}`}>
         <div>
           <h1>Your air today</h1>
           <p>{selectedLocation.name}, {selectedLocation.country}</p>
@@ -162,8 +165,16 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
         )}
       </header>
 
+      {view === 'home' && <section className="daily-home">
+        <div className="daily-hero"><img src="https://images.pexels.com/photos/2792605/pexels-photo-2792605.jpeg?auto=compress&cs=tinysrgb&w=2200" alt="Misty winter city at dawn"/><div className="daily-hero-overlay"/><div className="daily-hero-content"><span className="daily-eyebrow">WINTER AIR · YOUR DAY · YOUR ROUTINE</span><h2>A clearer plan<br/>for a hazy day.</h2><p>Bring your location, daily routine and local air conditions together. Get practical next steps you can ask questions about.</p><button className="daily-hero-button" onClick={()=>setSetupOpen(true)}>Build my daily plan ↗</button></div></div>
+        <section className="daily-section"><div className="daily-section-heading"><div><span className="daily-eyebrow">WHO IT HELPS</span><h2>Made for the way<br/>you move through a day.</h2></div><p>Outdoor activities, family routines and daily commutes meet the same changing winter air in different ways.</p></div><div className="daily-audience-grid"><article><span>🏃</span><h3>Outdoor routines</h3><p>Choose activity timing and intensity with air conditions in mind.</p></article><article><span>🏡</span><h3>Families & caregivers</h3><p>Plan school runs, outdoor play and calmer indoor-air routines.</p></article><article><span>🚇</span><h3>Daily commuters</h3><p>Think through commute exposure and practical route choices.</p></article></div></section>
+        <section className="daily-workflow"><div><span className="daily-eyebrow">HOW YOUR PLAN COMES TOGETHER</span><h2>Context in.<br/>Clear actions out.</h2><p>Set up the parts of your day that matter. Then explore and adjust your plan in a conversation with the assistant.</p><button className="daily-outline-button" onClick={()=>setSetupOpen(true)}>Start your check-in →</button></div><div className="daily-steps">{[['01','Your personal context','Location, activities, hobbies and health sensitivities.'],['02','Your workday','Work location, days, hours and commute.'],['03','A daily air plan','AQI and weather inform practical actions for your routine.'],['04','Talk it through','Ask the agent questions and choose reminders.']].map(([n,t,d])=><article key={n}><b>{n}</b><div><h3>{t}</h3><p>{d}</p></div></article>)}</div></section>
+        <section className="daily-glossary"><span className="daily-eyebrow">AIR QUALITY, IN PLAIN WORDS</span><h2>Three terms worth knowing.</h2><div><article><b>AQI</b><p>An index that summarizes outdoor air pollution and potential health impact.</p></article><article><b>PM2.5</b><p>Fine particles small enough to travel deep into the lungs.</p></article><article><b>Winter inversion</b><p>A weather pattern that can trap cooler polluted air near the ground.</p></article></div></section>
+        {setupOpen&&<DailySetup close={()=>setSetupOpen(false)} complete={()=>{setSetupOpen(false);setView('chat')}}/>}
+      </section>}
+
       <div className="workspace-layout">
-        <nav className="workspace-nav" aria-label="Dashboard views">
+        <nav className="workspace-nav" aria-label="Dashboard views" hidden={view==='home'}>
           {views.map(({ id, label }) => (
             <button key={id} type="button" aria-current={view === id ? 'page' : undefined} onClick={() => setView(id)}>
               {label}
@@ -266,4 +277,5 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
     </main>
   );
 };
+
 
