@@ -738,3 +738,8 @@ a { color: inherit; }
 .resident-dashboard .daily-audience-grid article,.resident-dashboard .daily-glossary article{transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;background:linear-gradient(145deg,#fffef9eb,#edf8efeb)}
 .resident-dashboard .daily-audience-grid article:hover,.resident-dashboard .daily-glossary article:hover{transform:translateY(-4px);border-color:#9bceb6;box-shadow:0 15px 34px #558d6d25}
 @media(prefers-reduced-motion:reduce){.resident-dashboard::before,.resident-dashboard::after,.daily-sidebar button::after{animation:none!important}.daily-sidebar button:not(.sidebar-brand),.daily-audience-grid article,.daily-glossary article{transition:none!important}}
+/* Signed-in header: soft morning colours */
+.app-container[data-theme="light"] .site-header{background:linear-gradient(105deg,#d5ede1 0%,#eaf5e9 43%,#fff0d5 100%);border-bottom:1px solid #c8e3d5;box-shadow:0 4px 20px #426f5b12}
+.app-container[data-theme="light"] .site-header .header-location-button{background:#ffffffa8;border-color:#b8d9ca;color:#285d53;transition:background .2s,box-shadow .2s,border-color .2s}
+.app-container[data-theme="light"] .site-header .header-location-button:hover,.app-container[data-theme="light"] .site-header .header-location-button:focus-visible{background:#f3fff6;border-color:#70b99c;box-shadow:0 0 0 3px #9bdabe70}
+.app-container[data-theme="light"] .site-header .account-menu summary{background:#fff9e9c9;border-color:#dbdcbf}
