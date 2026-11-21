@@ -743,3 +743,17 @@ a { color: inherit; }
 .app-container[data-theme="light"] .site-header .header-location-button{background:#ffffffa8;border-color:#b8d9ca;color:#285d53;transition:background .2s,box-shadow .2s,border-color .2s}
 .app-container[data-theme="light"] .site-header .header-location-button:hover,.app-container[data-theme="light"] .site-header .header-location-button:focus-visible{background:#f3fff6;border-color:#70b99c;box-shadow:0 0 0 3px #9bdabe70}
 .app-container[data-theme="light"] .site-header .account-menu summary{background:#fff9e9c9;border-color:#dbdcbf}
+/* Distinct morning layers and visible air currents */
+.app-container[data-theme="light"] .site-header{position:relative;z-index:7;background:linear-gradient(105deg,#dceef3 0%,#edf4f2 43%,#ffe9ca 100%);border-bottom:1px solid #b9d9d8;box-shadow:0 5px 24px #345b6420}
+.daily-sidebar{background:linear-gradient(165deg,#e7f3e8 0%,#f6faef 54%,#f8edda 100%);border-right:1px solid #b9d9c7}
+.resident-dashboard.main-content{background:radial-gradient(ellipse at 82% 10%,#ffe0ad 0%,transparent 32%),radial-gradient(ellipse at 10% 37%,#c5e7db 0%,transparent 34%),linear-gradient(145deg,#eef5f4 0%,#e5f1e9 48%,#fcebd3 100%)}
+.resident-dashboard::before{inset:68px -12% 0;opacity:.78;transform:none;background:repeating-radial-gradient(ellipse 88% 22% at 88% 37%,transparent 0 31px,#62a99855 32px 33px,transparent 34px 53px);animation:wind-current 18s ease-in-out infinite alternate}
+.resident-dashboard::after{inset:68px 0 0;opacity:.95;background:radial-gradient(circle at 84% 16%,#d38345aa 0 3px,transparent 4px),radial-gradient(circle at 78% 65%,#53a58caa 0 4px,transparent 5px),radial-gradient(circle at 20% 79%,#d39a66aa 0 3px,transparent 4px),radial-gradient(ellipse at 15% 80%,#b5e4d0a0,transparent 22%),radial-gradient(ellipse at 90% 24%,#ffe2a88c,transparent 25%);animation:wind-particles 10s ease-in-out infinite alternate}
+@keyframes wind-current{from{transform:translateX(-12px) rotate(-3deg) scale(1.08)}to{transform:translateX(28px) rotate(-1deg) scale(1.1)}}
+@keyframes wind-particles{from{transform:translateY(0);opacity:.65}to{transform:translateY(-15px);opacity:1}}
+.daily-sidebar::after{content:"";position:absolute;left:-50px;right:10px;bottom:50px;height:105px;pointer-events:none;border-top:1px solid #78b9a682;border-radius:50%;transform:rotate(-15deg);box-shadow:0 -12px 0 -11px #78b9a668,0 -24px 0 -23px #78b9a655,0 -36px 0 -35px #78b9a644}
+.daily-sidebar button:not(.sidebar-brand):hover,.daily-sidebar button:not(.sidebar-brand):focus-visible{border-color:#8dc5d2;background:#e3f3f5;box-shadow:0 0 0 3px #a7d9e451,0 5px 18px #719dad28}
+.daily-sidebar button.selected:not(.sidebar-brand){background:linear-gradient(105deg,#ccebe0,#e3f3e8);border-color:#70bca4}
+.daily-home::after{content:"";display:block;height:110px;margin:0 4% 25px;border-top:2px solid #67af9d80;border-radius:50%;transform:rotate(-4deg);box-shadow:0 -15px 0 -14px #67af9d77,0 -30px 0 -29px #67af9d66,0 -45px 0 -44px #c8905c66;pointer-events:none}
+.resident-dashboard .daily-hero{box-shadow:0 24px 48px #2d695b35,0 0 0 1px #ffffff70}
+@media(prefers-reduced-motion:reduce){.resident-dashboard::before,.resident-dashboard::after{animation:none!important}}
