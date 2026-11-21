@@ -452,8 +452,9 @@ a { color: inherit; }
 .landing-proof-row strong { position: relative; z-index: 1; font-size: .94rem; font-weight: 600; }
 .landing-proof-row small { position: relative; z-index: 1; margin-top: 3px; color: #496b6a; font-size: .75rem; line-height: 1.4; }
 .landing-story-section, .landing-use-section { width: min(1120px, calc(100% - 44px)); margin: 0 auto; color: #10373b; }
+.landing-atmosphere { position: relative; isolation: isolate; overflow: hidden; }
+.landing-atmosphere::before { content: ''; position: absolute; z-index: -1; inset: 0; background: url('./assets/morning-skyline.jpg') center / 100% 100% no-repeat; opacity: .5; mask-image: linear-gradient(to bottom, transparent, black 16%, black 87%, transparent); pointer-events: none; }
 .landing-story-section { position: relative; isolation: isolate; display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 70px; padding: 130px 0 105px; }
-.landing-story-section::before { content: ''; position: absolute; z-index: -1; left: 50%; bottom: -55px; width: 100vw; height: 330px; transform: translateX(-50%); background: url('./assets/morning-skyline.jpg') center bottom / cover no-repeat; opacity: .65; mask-image: linear-gradient(to bottom, transparent, black 43%, black 76%, transparent); pointer-events: none; }
 .landing-story-section::after { content: ''; position: absolute; z-index: -1; top: 6%; left: -16vw; width: 75vw; height: 240px; border-radius: 50%; border-top: 1px solid rgb(67 121 95 / .2); box-shadow: 0 -10px 0 -9px rgb(67 121 95 / .18), 0 -20px 0 -19px rgb(67 121 95 / .14), 0 -30px 0 -29px rgb(67 121 95 / .11); transform: rotate(9deg); pointer-events: none; }
 .section-intro-block h2, .landing-section-heading h2 { margin-top: 10px; font-size: clamp(2rem, 4vw, 3.3rem); font-weight: 550; letter-spacing: -.065em; line-height: 1.05; }
 .section-intro-block > p:last-child, .landing-section-heading > p:last-child { max-width: 510px; margin-top: 18px; color: #5b777c; font-size: .95rem; line-height: 1.7; }
@@ -531,7 +532,7 @@ a { color: inherit; }
 .landing-page[data-landing-theme="dark"] .landing-theme-toggle:hover,
 .landing-page[data-landing-theme="dark"] .landing-ghost-button:hover { background: #386451; }
 .landing-page[data-landing-theme="dark"] .story-visual { border-color: #51725f; background: radial-gradient(circle at 80% 15%, #655335, transparent 40%), #193b31; }
-.landing-page[data-landing-theme="dark"] .landing-story-section::before { opacity: .38; filter: brightness(.46) sepia(.35) hue-rotate(34deg) saturate(1.4); }
+.landing-page[data-landing-theme="dark"] .landing-atmosphere::before { opacity: .3; filter: brightness(.4) sepia(.35) hue-rotate(34deg) saturate(1.4); }
 .landing-page[data-landing-theme="dark"] .landing-story-section::after { border-color: rgb(208 191 114 / .3); box-shadow: 0 -10px 0 -9px rgb(208 191 114 / .22), 0 -20px 0 -19px rgb(208 191 114 / .17), 0 -30px 0 -29px rgb(208 191 114 / .12); }
 .landing-page[data-landing-theme="dark"] .story-explanation { background: #294b3c; color: #e3eadc; }
 .landing-page[data-landing-theme="dark"] .story-explanation strong { color: #f8f3dc; }
