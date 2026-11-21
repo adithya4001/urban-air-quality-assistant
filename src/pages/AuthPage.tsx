@@ -20,6 +20,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
       </section>
       <section className="auth-form-side" aria-label="Account access">
         <div className="auth-form-wrap">
+          <h2 className="auth-page-title">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+          <p className="auth-subtitle">Your air, your routine, your plan.</p>
           <div className="auth-tabs" aria-label="Account access">
             <button className={mode === 'login' ? 'auth-tab active' : 'auth-tab'} type="button"
               aria-pressed={mode === 'login'} onClick={() => setMode('login')}>Login</button>
@@ -27,8 +29,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
               aria-pressed={mode === 'register'} onClick={() => setMode('register')}>Register</button>
           </div>
           {mode === 'login'
-            ? <SignIn routing="hash" fallbackRedirectUrl={window.location.origin} />
-            : <SignUp routing="hash" fallbackRedirectUrl={window.location.origin} />}
+            ? <SignIn routing="hash" fallbackRedirectUrl={window.location.origin} appearance={{ elements: { rootBox: 'auth-clerk-root', cardBox: 'auth-clerk-box', card: 'auth-clerk-card', header: 'auth-clerk-header', footer: 'auth-clerk-footer' } }} />
+            : <SignUp routing="hash" fallbackRedirectUrl={window.location.origin} appearance={{ elements: { rootBox: 'auth-clerk-root', cardBox: 'auth-clerk-box', card: 'auth-clerk-card', header: 'auth-clerk-header', footer: 'auth-clerk-footer' } }} />}
         </div>
       </section>
     </main>

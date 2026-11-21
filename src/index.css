@@ -781,3 +781,5 @@ a { color: inherit; }
 .precaution-intro::after{content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;background:radial-gradient(circle at 92% 12%,#ffd89b80,transparent 27%),radial-gradient(circle at 10% 90%,#b9e5d280,transparent 28%)}
 .precaution-intro-heading{gap:40px}.precaution-features article{background:#fffef9eF}.precaution-open{margin-top:26px}
 @media(max-width:800px){.precaution-intro{padding:28px 20px;margin:30px 0 50px;border-radius:22px}}
+/* Match the established sign-in layout while retaining Clerk account flows. */
+.auth-page-title{margin:0;color:#123d40;font-size:1.65rem;line-height:1.2;font-weight:650;letter-spacing:-.035em}.auth-form-wrap>.auth-subtitle{margin:14px 0 24px}.auth-clerk-root,.auth-clerk-box{width:100%;max-width:none}.auth-clerk-box{box-shadow:none!important;background:transparent!important}.auth-clerk-card{width:100%;padding:0!important;box-shadow:none!important;border:0!important;background:transparent!important}.auth-clerk-header{margin-bottom:18px}.auth-form-side{align-items:center}.auth-form-wrap{max-width:430px}.auth-tabs .auth-tab{font-weight:650}.auth-visual-content h1{font-weight:500}
