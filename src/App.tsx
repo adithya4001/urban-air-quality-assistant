@@ -18,6 +18,7 @@ function getInitialScreen(): AppScreen {
 
 export const App: React.FC = () => {
   const [screen, setScreen] = useState<AppScreen>(getInitialScreen);
+  const [settingsRequest, setSettingsRequest] = useState(0);
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const leaveDashboard = () => { void signOut().then(() => setScreen('welcome')); };
@@ -29,8 +30,8 @@ export const App: React.FC = () => {
     return (
       <div className="app-container" data-theme="light">
         <a href="#main-content" className="skip-link">Skip to main content</a>
-        <Header profile={profile} onExit={leaveDashboard} />
-        <DashboardPage initialView={screen === 'agent' ? 'chat' : undefined} />
+        <Header profile={profile} onExit={leaveDashboard} onSettings={() => setSettingsRequest(n => n + 1)} />
+        <DashboardPage initialView={screen === 'agent' ? 'chat' : undefined} settingsRequest={settingsRequest} />
       </div>
     );
   }

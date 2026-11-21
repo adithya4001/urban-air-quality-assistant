@@ -79,7 +79,7 @@ function persist(key: string, value: unknown) {
   }
 }
 
-export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView }) => {
+export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: number }> = ({ initialView, settingsRequest }) => {
   const environmentService = useMemo(
     () => new EnvironmentService(
       new OpenMeteoAirQualityProvider(),
@@ -92,6 +92,7 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
   const [view, setView] = useState<View>(initialView ?? 'home');
   const [setupOpen, setSetupOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  useEffect(() => { if (settingsRequest) setView('settings'); }, [settingsRequest]);
   const [approvedPlan, setApprovedPlan] = useState<DailyPlan | null>(null);
   const [forceFallback, setForceFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | 'all'>('all');
@@ -160,11 +161,11 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
 
   return (
     <main id="main-content" className={`main-content resident-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} tabIndex={-1}>
-      <button className="sidebar-toggle" aria-expanded={sidebarOpen} aria-controls="daily-sidebar" onClick={() => setSidebarOpen(!sidebarOpen)}>{sidebarOpen ? '☰ Close menu' : '☰ Open menu'}</button>
+      <button className="sidebar-toggle" aria-label={sidebarOpen ? 'Close menu' : 'Open menu'} aria-expanded={sidebarOpen} aria-controls="daily-sidebar" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
       <nav id="daily-sidebar" className="daily-sidebar" aria-label="Main navigation" hidden={!sidebarOpen}>
         <button className="sidebar-brand" onClick={() => setView('home')}><span>◒</span> VaayuDootha</button>
         <p>YOUR AIR COMPANION</p>
-        {views.map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
+        {views.filter(({id}) => id !== 'settings').map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
       </nav>
       <div className="daily-main-area">
       <header className={`workspace-summary ${view === 'home' ? 'dashboard-home-hidden' : ''}`}>

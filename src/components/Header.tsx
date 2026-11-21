@@ -3,16 +3,17 @@ import React from 'react';
 interface HeaderProps {
   profile: { name: string; email: string };
   onExit: () => void;
+  onSettings?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ profile, onExit }) => (
+export const Header: React.FC<HeaderProps> = ({ profile, onExit, onSettings }) => (
   <header className="site-header">
     <div className="header-inner">
       <a className="brand-lockup" href="#main-content" aria-label="VaayuDootha home">
         <span className="brand-mark" aria-hidden="true">◒</span>
         <strong>VaayuDootha</strong>
       </a>
-      <details className="account-menu">
+      <div className="header-account-actions"><button className="header-location-button" onClick={onSettings}>⌖ Location & profile</button><details className="account-menu">
         <summary>
           <span className="account-avatar" aria-hidden="true">{profile.name.charAt(0).toUpperCase()}</span>
           <span>Profile</span>
@@ -22,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ profile, onExit }) => (
           <p>{profile.email}</p>
           <button type="button" onClick={onExit}>Sign out</button>
         </div>
-      </details>
+      </details></div>
     </div>
   </header>
 );
