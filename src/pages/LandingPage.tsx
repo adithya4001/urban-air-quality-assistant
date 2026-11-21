@@ -72,9 +72,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
         <AudienceCards />
       </section>
 
-      <section className="landing-cta-section" aria-labelledby="cta-title"><div><p className="landing-kicker">YOUR DAY, WITH MORE CLARITY</p><h2 id="cta-title">Start with the air around you.</h2><p>Your first plan takes less than a minute. The guidance gets smarter as your context gets clearer.</p></div><button className="landing-primary-button light-button" type="button" onClick={onSignIn}>Enter VaayuDootha <span aria-hidden="true">↗</span></button></section>
+      <section className="landing-cta-section" aria-labelledby="cta-title">
+        <img className="landing-cta-photo" src="https://images.pexels.com/photos/4684392/pexels-photo-4684392.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="" loading="lazy" decoding="async" />
+        <div className="landing-cta-copy">
+          <p className="landing-kicker">YOUR DAY, WITH MORE CLARITY</p>
+          <h2 id="cta-title">Start with the air around you.</h2>
+          <p>Bring your location and routine together for a more informed day.</p>
+          <button className="landing-primary-button light-button" type="button" onClick={onSignIn}>Enter VaayuDootha <span aria-hidden="true">↗</span></button>
+        </div>
+        <a className="landing-cta-credit" href="https://www.pexels.com/photo/city-skyline-during-orange-sunrise-4684392/" target="_blank" rel="noreferrer">Photo: Taryn Elliott / Pexels</a>
+      </section>
     </main>
 
-    <footer className="landing-footer"><span>© VaayuDootha · PromptWars Challenge 06</span><span>General environmental guidance only · Not medical diagnosis</span></footer>
   </div>
 );
