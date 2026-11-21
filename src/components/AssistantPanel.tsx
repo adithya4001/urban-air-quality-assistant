@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AssistantContext, AssistantReply } from '../domain/assistant';
 import { createAssistantProvider } from '../services/AssistantService';
 
 interface AssistantPanelProps {
   context: AssistantContext;
+  onApprove: () => void;
 }
 
 const quickQuestions = [
@@ -13,7 +14,7 @@ const quickQuestions = [
   'What is the lowest-emission commute?',
 ];
 
-export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
+export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context, onApprove }) => {
   const [question, setQuestion] = useState('');
   const [turns, setTurns] = useState<Array<{ question: string; reply: AssistantReply }>>([]);
   const [isAsking, setIsAsking] = useState(false);
@@ -21,6 +22,18 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
   const [remindersOn, setRemindersOn] = useState(false);
   const [reminderTime, setReminderTime] = useState('07:00');
   const provider = useMemo(() => createAssistantProvider(), []);
+
+  useEffect(() => {
+    if (!remindersOn) return;
+    let timeout: number;
+    const schedule = () => {
+      const [hours, minutes] = reminderTime.split(':').map(Number);
+      const now = new Date(); const next = new Date(); next.setHours(hours, minutes, 0, 0);
+      if (next <= now) next.setDate(next.getDate() + 1);
+      timeout = window.setTimeout(() => { new Notification('VaayuDootha air check-in', { body: 'Check today’s air and review your plan.' }); schedule(); }, next.getTime() - now.getTime());
+    };
+    schedule(); return () => window.clearTimeout(timeout);
+  }, [remindersOn, reminderTime]);
 
   const ask = async (value = question) => {
     const trimmed = value.trim();
@@ -47,17 +60,17 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context }) => {
         </div>
       </div>
 
+      <button className="secondary-button" type="button" onClick={onApprove}>Approve current recommendations</button>
+
       <div className="assistant-reminders">
-        <div><strong>Daily air check-in</strong><small>Reminder in this browser at your chosen time</small></div>
+        <div><strong>Daily air check-in</strong><small>Reminder works while this page stays open</small></div>
         <input aria-label="Reminder time" type="time" value={reminderTime} onChange={event => setReminderTime(event.target.value)} disabled={!remindersOn} />
         <button type="button" className={remindersOn ? 'reminder-toggle active' : 'reminder-toggle'} onClick={async () => {
-          if (remindersOn) { setRemindersOn(false); window.clearInterval(Number(localStorage.getItem('vaayudootha.reminder.timer'))); localStorage.removeItem('vaayudootha.reminder.timer'); return; }
+          if (remindersOn) { setRemindersOn(false); return; }
           if (!('Notification' in window)) return;
           const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
           if (permission !== 'granted') return;
           setRemindersOn(true);
-          const schedule = () => { const [hours, minutes] = reminderTime.split(':').map(Number); const now = new Date(); const next = new Date(); next.setHours(hours, minutes, 0, 0); if(next<=now)next.setDate(next.getDate()+1); window.setTimeout(()=>new Notification('VaayuDootha air check-in',{body:'Check today’s air conditions and review your personal plan.'}),next.getTime()-now.getTime()); };
-          schedule(); const timer=window.setInterval(schedule,86400000); localStorage.setItem('vaayudootha.reminder.timer',String(timer));
         }}>{remindersOn ? 'On' : 'Enable reminder'}</button>
       </div>
 

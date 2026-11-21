@@ -18,9 +18,10 @@ import { DailySetup } from '../components/DailySetup';
 
 const views = [
   { id: 'home', label: 'Home' },
-  { id: 'chat', label: 'Assistant' },
-  { id: 'plan', label: 'Action plan' },
-  { id: 'insights', label: 'Air insights' },
+  { id: 'chat', label: 'Chat with agent' },
+  { id: 'insights', label: 'Weather & air insights' },
+  { id: 'plan', label: 'Today’s approved plan' },
+  { id: 'safety', label: 'Safety & sources' },
   { id: 'settings', label: 'Location & profile' },
 ] as const;
 type View = (typeof views)[number]['id'];
@@ -90,6 +91,8 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
   const [userProfile, setUserProfile] = useState<UserProfile>(getStoredProfile);
   const [view, setView] = useState<View>(initialView ?? 'home');
   const [setupOpen, setSetupOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [approvedPlan, setApprovedPlan] = useState<DailyPlan | null>(null);
   const [forceFallback, setForceFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | 'all'>('all');
   const [dailyPlan, setDailyPlan] = useState<DailyPlan | null>(null);
@@ -103,6 +106,11 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
     try { window.localStorage.setItem(LOCATION_STORAGE_KEY, value); } catch { /* Optional storage. */ }
   }, [selectedLocation]);
   useEffect(() => persist(PROFILE_STORAGE_KEY, userProfile), [userProfile]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRefreshNonce((value) => value + 1), 30 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,7 +159,14 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
     : null;
 
   return (
-    <main id="main-content" className="main-content resident-dashboard" tabIndex={-1}>
+    <main id="main-content" className={`main-content resident-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} tabIndex={-1}>
+      <button className="sidebar-toggle" aria-expanded={sidebarOpen} aria-controls="daily-sidebar" onClick={() => setSidebarOpen(!sidebarOpen)}>{sidebarOpen ? '☰ Close menu' : '☰ Open menu'}</button>
+      <nav id="daily-sidebar" className="daily-sidebar" aria-label="Main navigation" hidden={!sidebarOpen}>
+        <button className="sidebar-brand" onClick={() => setView('home')}><span>◒</span> VaayuDootha</button>
+        <p>YOUR AIR COMPANION</p>
+        {views.map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
+      </nav>
+      <div className="daily-main-area">
       <header className={`workspace-summary ${view === 'home' ? 'dashboard-home-hidden' : ''}`}>
         <div>
           <h1>Your air today</h1>
@@ -174,13 +189,6 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
       </section>}
 
       <div className="workspace-layout">
-        <nav className="workspace-nav" aria-label="Dashboard views" hidden={view==='home'}>
-          {views.map(({ id, label }) => (
-            <button key={id} type="button" aria-current={view === id ? 'page' : undefined} onClick={() => setView(id)}>
-              {label}
-            </button>
-          ))}
-        </nav>
 
         <div className="workspace-content">
           {view !== 'settings' && loadError && (
@@ -197,7 +205,7 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
           )}
 
           <div className="workspace-chat" hidden={view !== 'chat'}>
-            {assistantContext && <AssistantPanel key={currentPlan?.generatedAt} context={assistantContext} />}
+            {assistantContext && <AssistantPanel context={assistantContext} onApprove={() => {if(currentPlan){setApprovedPlan(currentPlan);setView('plan')}}} />}
             {currentPlan?.recommendations[0] && (
               <aside className="next-action" aria-labelledby="next-action-title">
                 <h2 id="next-action-title">Start here</h2>
@@ -213,7 +221,8 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
               <div className="section-heading-row">
                 <div>
                   <h2 id="recommendations-title" className="section-title">Recommended actions</h2>
-                  <p className="section-copy">Practical steps for the location and profile you selected.</p>
+                  <p className="section-copy">{approvedPlan ? `Approved for ${approvedPlan.location.city} on ${new Date(approvedPlan.generatedAt).toLocaleString()}. Reapprove in chat after changes.` : 'Approve the current recommendations in chat to show them here.'}</p>
+                  {approvedPlan && <button className="secondary-button" onClick={() => {window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance(approvedPlan.recommendations.map(r=>`${r.title}. ${r.summary}`).join('. ')))}}>Read plan aloud</button>}
                 </div>
                 <div className="filter-control">
                   <label htmlFor="category-filter">Show</label>
@@ -229,7 +238,7 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
               </div>
               <div className="recommendation-list" aria-busy={isLoading} aria-label="Personalized recommendations">
                 {filteredRecommendations.length === 0 && <p className="section-copy">No actions in this category today.</p>}
-                  {filteredRecommendations.map((recommendation) => <RecommendationCard key={recommendation.id} recommendation={recommendation} />)}
+                  {approvedPlan && approvedPlan.recommendations.filter(r=>selectedCategory==='all'||r.category===selectedCategory).map((recommendation) => <RecommendationCard key={recommendation.id} recommendation={recommendation} />)}
               </div>
             </section>
           )}
@@ -271,9 +280,11 @@ export const DashboardPage: React.FC<{ initialView?: View }> = ({ initialView })
               <UserProfileEditor profile={userProfile} onChange={setUserProfile} />
             </section>
           )}
+          {view === 'safety' && <section className="card safety-sources"><h2>Safety & trusted sources</h2><p>Use today’s air and weather information to choose suitable precautions. Conditions can change during the day.</p><ul><li>Reduce strenuous outdoor activity when air quality is poor, particularly if you are sensitive to pollution.</li><li>Keep indoor air cleaner by limiting smoke and using filtration when available.</li><li>Follow your clinician’s existing advice for health conditions.</li></ul><h3>Weather updates and guidance</h3><p>Open these sources for current local warnings and news:</p><ul><li><a href="https://mausam.imd.gov.in/" target="_blank" rel="noreferrer">India Meteorological Department</a></li><li><a href="https://airquality.cpcb.gov.in/" target="_blank" rel="noreferrer">Central Pollution Control Board — air quality</a></li><li><a href="https://www.who.int/health-topics/air-pollution" target="_blank" rel="noreferrer">WHO — air pollution and health</a></li></ul></section>}
         </div>
       </div>
       <MedicalDisclaimer />
+      </div>
     </main>
   );
 };
