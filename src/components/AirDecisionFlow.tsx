@@ -7,8 +7,6 @@ const steps = [
     icon: '☁',
     explanation: 'See how the air and weather around your location could affect your day.',
     image: 'https://images.pexels.com/photos/14979733/pexels-photo-14979733.jpeg?auto=compress&cs=tinysrgb&w=720',
-    credit: 'İdil Ceren Çelikler',
-    source: 'https://www.pexels.com/photo/air-pollution-over-city-14979733/',
   },
   {
     title: 'Your context',
@@ -16,8 +14,6 @@ const steps = [
     icon: '⌖',
     explanation: 'Add your routine and any sensitivities so the guidance fits your situation.',
     image: 'https://images.pexels.com/photos/5999835/pexels-photo-5999835.jpeg?auto=compress&cs=tinysrgb&w=720',
-    credit: 'Ono Kosuki',
-    source: 'https://www.pexels.com/photo/ethnic-woman-writing-notes-in-planner-with-takeaway-coffee-5999835/',
   },
   {
     title: 'One clear next move',
@@ -25,8 +21,6 @@ const steps = [
     icon: '✦',
     explanation: 'Find practical steps for outdoor activities, indoor air and your commute.',
     image: 'https://images.pexels.com/photos/28351753/pexels-photo-28351753.jpeg?auto=compress&cs=tinysrgb&w=720',
-    credit: 'Mak_ jp',
-    source: 'https://www.pexels.com/photo/a-person-walking-down-a-street-in-the-city-28351753/',
   },
 ] as const;
 
@@ -41,9 +35,6 @@ export function AirDecisionFlow() {
             className={active === index ? 'story-photo-active' : ''}
           />
         ))}
-        <a className="story-photo-credit" href={steps[active].source} target="_blank" rel="noreferrer">
-          Photo: {steps[active].credit} / Pexels
-        </a>
       </div>
       <div className="story-steps" aria-label="Explore the steps">
         {steps.map((step, index) => (

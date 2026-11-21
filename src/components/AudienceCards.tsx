@@ -7,8 +7,6 @@ const audiences = [
     prompt: 'Explore an example',
     example: 'When the air is poor, consider an indoor workout or a shorter, gentler activity.',
     image: 'https://images.pexels.com/photos/6039243/pexels-photo-6039243.jpeg?auto=compress&cs=tinysrgb&w=720',
-    credit: 'Enric Cruz López',
-    source: 'https://www.pexels.com/photo/unrecognizable-woman-jogging-along-footpath-in-park-6039243/',
   },
   {
     title: 'Families',
@@ -16,8 +14,6 @@ const audiences = [
     prompt: 'Explore an example',
     example: 'Plan school trips around local conditions and follow the most sensitive family member’s needs.',
     image: 'https://images.pexels.com/photos/29718665/pexels-photo-29718665.jpeg?auto=compress&cs=tinysrgb&w=720',
-    credit: 'Chris wade NTEZICIMPA',
-    source: 'https://www.pexels.com/photo/family-stroll-in-park-with-parents-and-child-29718665/',
   },
   {
     title: 'Everyday commuters',
@@ -25,8 +21,6 @@ const audiences = [
     prompt: 'Explore an example',
     example: 'A quieter walking route or a shared trip may fit your commute and reduce exposure or emissions.',
     image: 'https://images.pexels.com/photos/9951857/pexels-photo-9951857.jpeg?auto=compress&cs=tinysrgb&w=720',
-    credit: 'Rajan Gaur',
-    source: 'https://www.pexels.com/photo/photograph-of-people-waiting-in-a-train-station-9951857/',
   },
 ] as const;
 
@@ -41,9 +35,6 @@ export function AudienceCards() {
           <article className="audience-card" key={audience.title} data-active={expanded}>
             <div className="audience-photo">
               <img src={audience.image} alt="" loading="lazy" decoding="async" />
-              <a className="audience-credit" href={audience.source} target="_blank" rel="noreferrer">
-                Photo: {audience.credit} / Pexels
-              </a>
             </div>
             <div className="audience-content">
               <h3>{audience.title}</h3>

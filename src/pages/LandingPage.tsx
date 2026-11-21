@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ExampleAirReports } from '../components/ExampleAirReports';
 import { AirDecisionFlow } from '../components/AirDecisionFlow';
 import { AudienceCards } from '../components/AudienceCards';
@@ -8,8 +8,20 @@ interface LandingPageProps {
   onTryDemo: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo }) => (
-  <div className="landing-page">
+export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo }) => {
+  const [dark, setDark] = useState(() => {
+    try { return window.localStorage.getItem('vaayudootha.welcomeTheme') === 'dark'; }
+    catch { return false; }
+  });
+
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    try { window.localStorage.setItem('vaayudootha.welcomeTheme', next ? 'dark' : 'light'); } catch { /* Optional preference. */ }
+  };
+
+  return (
+  <div className="landing-page" data-landing-theme={dark ? 'dark' : 'light'}>
     <header className="landing-nav" role="banner">
       <a className="landing-brand" href="#welcome" aria-label="VaayuDootha welcome">
         <span className="landing-brand-mark" aria-hidden="true">◒</span>
@@ -18,6 +30,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
       <nav className="landing-nav-links" aria-label="Welcome navigation">
         <a href="#why-breathesafe">Why VaayuDootha</a>
         <a href="#how-it-works">How it works</a>
+        <button className="landing-theme-toggle" type="button" onClick={toggleTheme} aria-label="Dark mode" aria-pressed={dark}>
+          <span aria-hidden="true">{dark ? '☾' : '☀'}</span><span>{dark ? 'Dark' : 'Light'}</span>
+        </button>
         <button className="landing-signin-link" type="button" onClick={onSignIn}>Login</button>
       </nav>
     </header>
@@ -80,9 +95,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onTryDemo })
           <p>Bring your location and routine together for a more informed day.</p>
           <button className="landing-primary-button light-button" type="button" onClick={onSignIn}>Enter VaayuDootha <span aria-hidden="true">↗</span></button>
         </div>
-        <a className="landing-cta-credit" href="https://www.pexels.com/photo/city-skyline-during-orange-sunrise-4684392/" target="_blank" rel="noreferrer">Photo: Taryn Elliott / Pexels</a>
       </section>
     </main>
 
   </div>
-);
+  );
+};
