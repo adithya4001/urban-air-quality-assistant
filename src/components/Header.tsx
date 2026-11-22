@@ -7,12 +7,13 @@ interface HeaderProps {
   onEditProfile: () => void;
   onAppSettings: () => void;
   onPersonalDetails: () => void;
+  onDailyPlan: () => void;
   avatarUrl?: string;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ profile, onExit, onSettings, onEditProfile, onAppSettings, onPersonalDetails, avatarUrl, sidebarOpen, onToggleSidebar }) => (
+export const Header: React.FC<HeaderProps> = ({ profile, onExit, onSettings, onEditProfile, onAppSettings, onPersonalDetails, onDailyPlan, avatarUrl, sidebarOpen, onToggleSidebar }) => (
   <header className="site-header">
     <div className="header-inner">
       <button type="button" className="header-menu-toggle" aria-label={sidebarOpen ? 'Close menu' : 'Open menu'} aria-expanded={sidebarOpen} aria-controls="daily-sidebar" onClick={onToggleSidebar}>☰</button>
@@ -30,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ profile, onExit, onSettings, onE
           <p>{profile.email}</p>
           <button type="button" onClick={onEditProfile}>Edit profile & photo</button>
           <button type="button" onClick={onPersonalDetails}>Personal details</button>
+          <button type="button" onClick={onDailyPlan}>Daily plan setup</button>
           <button type="button" onClick={onAppSettings}>App settings</button>
           <button type="button" onClick={onSettings}>Set location</button>
           <button type="button" onClick={onExit}>Sign out</button>

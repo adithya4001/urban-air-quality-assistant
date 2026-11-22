@@ -84,7 +84,7 @@ function persist(key: string, value: unknown) {
   }
 }
 
-export const DashboardPage: React.FC<{ userId: string; initialView?: View; settingsRequest?: number; personalRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ userId, initialView, settingsRequest, personalRequest, sidebarOpen, setSidebarOpen }) => {
+export const DashboardPage: React.FC<{ userId: string; initialView?: View; settingsRequest?: number; personalRequest?: number; dailySetupRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ userId, initialView, settingsRequest, personalRequest, dailySetupRequest, sidebarOpen, setSidebarOpen }) => {
   const {prefs} = usePreferences();
   const environmentService = useMemo(
     () => new EnvironmentService(
@@ -100,6 +100,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
   const [userProfile, setUserProfile] = useState<UserProfile>(() => getStoredProfile(profileKey));
   const [view, setView] = useState<View>(initialView ?? 'home');
   const [setupOpen, setSetupOpen] = useState(false);
+  useEffect(() => { if (dailySetupRequest) setSetupOpen(true); }, [dailySetupRequest]);
   useEffect(() => { if (settingsRequest) setView('settings'); }, [settingsRequest]);
   useEffect(() => { if (personalRequest) setView('personal'); }, [personalRequest]);
   const [approvedPlan, setApprovedPlan] = useState<DailyPlan | null>(null);
@@ -190,17 +191,17 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
       </header>
 
       {view === 'home' && <section className="daily-home">
-        <div className="daily-hero"><img src="https://images.pexels.com/photos/2792605/pexels-photo-2792605.jpeg?auto=compress&cs=tinysrgb&w=2200" alt="Misty winter city at dawn"/><div className="daily-hero-overlay"/><div className="daily-hero-content"><span className="daily-eyebrow">WINTER AIR · YOUR DAY · YOUR ROUTINE</span><h2>A clearer plan for a hazy day.</h2><p>Bring your location, daily routine and local air conditions together. Get practical next steps you can ask questions about.</p><button className="daily-hero-button" onClick={()=>setSetupOpen(true)}>Build my daily plan ↗</button></div></div>
+        <div className="daily-hero"><img src="https://images.pexels.com/photos/2792605/pexels-photo-2792605.jpeg?auto=compress&cs=tinysrgb&w=2200" alt="Misty winter city at dawn"/><div className="daily-hero-overlay"/><div className="daily-hero-content"><span className="daily-eyebrow">WINTER AIR · YOUR DAY · YOUR ROUTINE</span><h2>A clearer plan for a hazy day.</h2><p>Bring your location, daily routine and local air conditions together. Get practical next steps you can ask questions about.</p><button className="daily-hero-button" onClick={()=>{setView('chat');window.scrollTo({top:0,behavior:'smooth'})}}>Chat with agent ↗</button></div></div>
         <section className="daily-section"><div className="daily-section-heading"><div><span className="daily-eyebrow">WHO IT HELPS</span><h2>Made for the way you move through a day.</h2></div><p>Outdoor activities, family routines and daily commutes meet the same changing winter air in different ways.</p></div><DailyAudienceCards /></section>
-        <section className="daily-workflow"><div><span className="daily-eyebrow">HOW YOUR PLAN COMES TOGETHER</span><h2>Context in. Clear actions out.</h2><p>Set up the parts of your day that matter. Then explore and adjust your plan in a conversation with the assistant.</p><button className="daily-outline-button" onClick={()=>setSetupOpen(true)}>Start your check-in →</button></div><ol className="daily-flowchart" aria-label="How your plan comes together">{[
+        <section className="daily-workflow"><div><span className="daily-eyebrow">HOW YOUR PLAN COMES TOGETHER</span><h2>Context in. Clear actions out.</h2><p>Set up the parts of your day that matter. Then explore and adjust your plan in a conversation with the assistant.</p><button className="daily-outline-button" onClick={()=>{setView('chat');window.scrollTo({top:0,behavior:'smooth'})}}>Chat with agent →</button></div><ol className="daily-flowchart" aria-label="How your plan comes together">{[
           { number:'01', title:'Your personal context', description:'Location, activities, hobbies and health sensitivities.', image:'https://images.pexels.com/photos/3769021/pexels-photo-3769021.jpeg?auto=compress&cs=tinysrgb&w=480' },
           { number:'02', title:'Your workday', description:'Work location, days, hours and commute.', image:'https://images.pexels.com/photos/374074/pexels-photo-374074.jpeg?auto=compress&cs=tinysrgb&w=480' },
           { number:'03', title:'A daily air plan', description:'AQI and weather inform practical actions for your routine.', image:'https://images.pexels.com/photos/125510/pexels-photo-125510.jpeg?auto=compress&cs=tinysrgb&w=480' },
           { number:'04', title:'Talk it through', description:'Ask the agent questions and choose reminders.', image:'https://images.pexels.com/photos/4065876/pexels-photo-4065876.jpeg?auto=compress&cs=tinysrgb&w=480' },
         ].map((step,index)=><li key={step.number}><article><img src={step.image} alt="" loading="lazy"/><div className="daily-flow-copy"><span>STEP {step.number}</span><h3>{step.title}</h3><p>{step.description}</p></div></article>{index<3&&<span className="daily-flow-arrow" aria-hidden="true">↓</span>}</li>)}</ol></section>
         <section className="precaution-intro"><div className="precaution-intro-heading"><div><span className="daily-eyebrow">CARE THROUGH THE COLD</span><h2>A little extra care for winter days.</h2></div><p>Explore practical precautions, understand when to seek care and find guidance for your questions.</p></div><div className="precaution-features">{[{title:'Understand your symptoms',text:'Learn when to speak with a healthcare professional about new or worsening symptoms.',image:'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=800'},{title:'Protect your breathing',text:'Find simple ways to reduce exposure to cold air, smoke and pollution.',image:'https://images.pexels.com/photos/3786157/pexels-photo-3786157.jpeg?auto=compress&cs=tinysrgb&w=800'},{title:'Care for your loved ones',text:'Consider the needs of children, older adults and people with existing conditions.',image:'https://images.pexels.com/photos/3768131/pexels-photo-3768131.jpeg?auto=compress&cs=tinysrgb&w=800'}].map(item=><article key={item.title}><img src={item.image} alt="" loading="lazy"/><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div><button className="daily-hero-button precaution-open" onClick={()=>{setView('precaution');window.scrollTo({top:0,behavior:'smooth'})}}>Explore precaution centre ↗</button></section>
-        {setupOpen&&<DailySetup close={()=>setSetupOpen(false)} complete={()=>{setSetupOpen(false);setView('chat')}}/>}
       </section>}
+      {setupOpen&&<DailySetup close={()=>setSetupOpen(false)} complete={()=>{setSetupOpen(false);setView('chat')}}/>}
 
       <div className="workspace-layout">
 
