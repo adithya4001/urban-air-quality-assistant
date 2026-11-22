@@ -83,7 +83,7 @@ export class EnvironmentService implements IEnvironmentService {
       dataSource: usedFallback ? (reasons.length === 2 ? 'fallback' : 'mixed') : 'live',
       dataAttribution: usedFallback
         ? 'Live Open-Meteo data is used where available; missing signals use clearly labelled scenario fallback data.'
-        : 'Live data: Open-Meteo weather and CAMS ENSEMBLE air-quality forecast.',
+        : 'Model estimates: Open-Meteo weather and CAMS air-quality forecast.',
     };
   }
 }

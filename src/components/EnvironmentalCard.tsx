@@ -17,7 +17,7 @@ export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
   dataSource = 'scenario',
   dataAttribution,
 }) => {
-  const riskColor = getRiskLevelColor(effectiveRisk);
+  const riskColor = getRiskLevelColor(airQuality.riskLevel);
 
   return (
     <div className="card" style={{ marginBottom: '24px' }}>
@@ -44,11 +44,12 @@ export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
             padding: '4px 10px',
           }}
         >
-          {getRiskLevelLabel(effectiveRisk)}
+          US AQI: {getRiskLevelLabel(airQuality.riskLevel)}
         </span>
         </div>
       </div>
 
+      {effectiveRisk !== airQuality.riskLevel && <p className="muted-note">Personal planning risk: {getRiskLevelLabel(effectiveRisk)} based on profile and conditions.</p>}
       {/* Main AQI and Condition Highlight */}
       <div
         style={{
@@ -76,7 +77,7 @@ export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
               letterSpacing: '0.04em',
             }}
           >
-            Ambient Air Quality Index (AQI)
+            {airQuality.isStaleOrFallback ? 'Sample ' : ''}US Air Quality Index (AQI)
           </span>
           <div
             style={{
@@ -90,7 +91,7 @@ export const EnvironmentalCard: React.FC<EnvironmentalCardProps> = ({
             {formatAqi(airQuality.aqi)}
           </div>
           <p style={{ fontSize: '0.82rem', color: riskColor.text, marginTop: '4px', fontWeight: 600 }}>
-            Primary Driver: {airQuality.primaryPollutant}
+            {airQuality.primaryPollutant ? `Example primary pollutant: ${airQuality.primaryPollutant}` : 'Pollutant driver not identified'}
           </p>
         </div>
 

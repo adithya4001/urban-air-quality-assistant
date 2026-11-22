@@ -83,15 +83,15 @@ function evaluateOutdoorActivity(
       priority: 'critical',
       title: 'Eliminate Non-Essential Outdoor Exposure',
       summary:
-        'Ambient particulate levels pose severe health hazards for all individuals, exacerbated by winter atmospheric stagnation.',
+        'Poor air quality can affect everyone. Consider reducing outdoor exposure, especially during strenuous activity.',
       actionItems: [
         'Cancel outdoor workouts, runs, and walks; switch to indoor stretching or light aerobics.',
         isSensitive
-          ? 'Keep quick-relief inhalers / emergency medications easily accessible at all times.'
+          ? 'Keep any prescribed inhalers or other medication accessible and follow your existing care plan.'
           : 'Minimize outdoor transit time; avoid prolonged exertion outside.',
         weather.inversionRisk === 'severe'
-          ? 'Thermal inversion is trapping surface pollutants; pollution may be higher during dawn and late-night hours.'
-          : 'Peak particulate concentrations will remain elevated until surface winds increase.',
+          ? 'Stagnant weather may allow pollutants to accumulate; check current local updates.'
+          : 'Check updated air-quality forecasts before rearranging outdoor activities.',
       ],
       healthImpact:
         'Reduces inhaled fine particles and may lower exposure-related irritation during a severe smog episode.',
@@ -111,13 +111,13 @@ function evaluateOutdoorActivity(
       priority: 'high',
       title: 'Curtail High-Intensity Outdoor Exertion',
       summary:
-        'Elevated fine particulate concentrations will cause respiratory fatigue and irritation during heavy breathing.',
+        'Elevated particle concentrations can irritate the respiratory system, especially during heavy breathing.',
       actionItems: [
         'Shift jogging or cycling indoors, or replace with low-intensity walking.',
-        'Schedule brief outdoor errands during mid-day when solar heating temporarily lifts thermal inversions.',
+        'Check the hourly air-quality forecast and choose a cleaner time when practical.',
         isSensitive
-          ? 'Reduce exposure duration to under 20-30 minutes and monitor for coughing or wheezing.'
-          : 'Take frequent rests and drink water to maintain mucous membrane barrier health.',
+          ? 'Reduce exposure duration where practical and follow your clinician’s advice if symptoms occur.'
+          : 'Take breaks indoors if the air or exertion causes discomfort.',
       ],
       healthImpact:
         'Lower-intensity and shorter outdoor activity generally reduces the amount of polluted air inhaled compared with vigorous exercise.',
@@ -252,7 +252,7 @@ function evaluateIndoorAir(
     actionItems.push('Avoid indoor combustion: do not burn candles, incense, or fry foods without an exhaust hood.');
   } else if (effectiveRisk === 'low' || effectiveRisk === 'moderate') {
     actionItems.push(
-      'Perform cross-ventilation during warm afternoon hours (12 PM - 3 PM) to refresh indoor oxygen levels.'
+      'Ventilate when outdoor air is cleaner, while keeping indoor temperatures safe.'
     );
   }
 
@@ -271,7 +271,7 @@ function evaluateIndoorAir(
       'Indoor air can quickly deteriorate during winter smog due to infiltration and internal combustion sources.',
     actionItems,
     healthImpact:
-      'True HEPA filtration lowers indoor PM2.5 concentrations by 50-80%, significantly reducing nocturnal bronchial spasms.',
+      'Appropriately sized particle filtration can reduce indoor particle exposure; results depend on the room and equipment.',
     environmentalImpact:
       'Limiting supplemental wood burning reduces soot and fine-particle emissions in the local airshed.',
     sourceGuidance: 'EPA Indoor Air Quality Building Guidelines & CDC Smog Protocols',
@@ -293,11 +293,11 @@ function evaluateEmissionReduction(
     priority: 'medium',
     title: 'Neighborhood Winter Smog Mitigation',
     summary:
-      'Winter temperature inversions create an atmospheric "lid", meaning every localized emission directly worsens the breathable air pool.',
+      'During some winter conditions, stagnant air can allow pollution to accumulate.',
     actionItems: [
       heating === 'wood_biomass'
         ? 'Avoid using wood-burning fireplaces or fire pits during stagnant smog advisories.'
-        : 'Set home thermostats to 19-20°C (66-68°F) to curb thermal powerplant load while staying comfortable.',
+        : 'Save energy when practical while keeping indoor temperatures safe and comfortable.',
       'Report illicit waste burning or construction dust infractions to municipal environmental hotlines.',
       weather.inversionRisk !== 'none'
         ? 'Refrain from vehicle idling in driveways and school drop-off zones.'
@@ -343,14 +343,14 @@ function evaluateProtectiveEquipment(
     priority: effectiveRisk === 'hazardous' ? 'critical' : 'high',
     title: 'Wear Certified Particulate Respirator (N95 / FFP2 / KF94)',
     summary:
-      'Standard cloth and surgical masks cannot filter sub-micron fine particles (PM2.5); certified tight-fitting respirators are essential.',
+      'A well-fitting certified respirator can reduce particle exposure; loose-fitting masks generally provide less protection.',
     actionItems: [
       'Don a certified N95, FFP2, or KF94 respirator before stepping outdoors.',
       'Ensure a secure, gap-free seal around the bridge of the nose and chin.',
       profile.hasN95Masks
-        ? 'Replace disposable respirators if soiled, damp, or after 8-10 cumulative hours of use.'
+        ? 'Replace disposable respirators when damaged, dirty, damp, or difficult to breathe through, following manufacturer guidance.'
         : 'Procure NIOSH-approved or CE-certified respirators from authorized pharmacies.',
-      'Cloth masks, scarves, and loose surgical masks do NOT provide adequate PM2.5 filtration.',
+      'Cloth masks, scarves, and loose surgical masks generally provide less protection from fine particles.',
     ],
     healthImpact:
       'Certified respirators are designed to filter fine particles when correctly selected, fitted, and worn.',

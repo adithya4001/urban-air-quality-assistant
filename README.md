@@ -3,7 +3,7 @@
 **PromptWars Virtual Challenge 6: Urban Air Quality Assistant**  
 *GenAI-powered Urban Air Quality Assistant for winter smog and pollution guidance*
 
-A production-grade, accessible foundation for an environmental health companion designed to help urban residents, children, and vulnerable families navigate severe winter smog and urban air pollution.
+A prototype environmental health companion designed to help urban residents, children, and vulnerable families navigate severe winter smog and urban air pollution.
 
 ---
 
@@ -30,8 +30,7 @@ This solution provides **personalized, deterministic guidance** tailored to loca
 ## 2. Architectural Design & Philosophy
 
 ### 2.1 Deterministic-First Safety Model
-Generative AI must **explain, contextualize, and personalize** advice, but it must **never invent or hallucinate unsafe medical recommendations**. 
-All baseline recommendations and risk thresholds in VaayuDootha are calculated by a pure, deterministic engine (`src/domain/recommendationEngine.ts`) with zero stochastic drift. Future GenAI extensions consume this deterministic output as a hard constraint.
+Baseline recommendations and risk thresholds are calculated by a deterministic engine (`src/domain/recommendationEngine.ts`). The configured Gemini model explains the plan and answers related questions; it may still make mistakes, and its output is not clinical advice. Limited emergency phrase matching provides immediate guidance for some urgent symptoms; it is not comprehensive triage.
 
 ### 2.2 Provider Abstraction, Live Data & Safe Fallback
 Environmental data (air quality and meteorological snapshots) is mediated via interfaces:
@@ -41,15 +40,15 @@ Environmental data (air quality and meteorological snapshots) is mediated via in
 
 The default dashboard connects to the no-key Open-Meteo Weather and Air Quality APIs using the selected location's coordinates. The UI shows whether the current plan is **live**, **mixed live + fallback**, or a **conservative fallback**. The app never presents a failed network request as live telemetry.
 
-If live telemetry fails or coordinates have no coverage, the system gracefully shifts into a **Conservative Safety Baseline** (`isStaleOrFallback: true`) rather than crashing or showing blank screens. Users can also simulate sensor outages from the reliability test controls. Live data is attributed in the UI to Open-Meteo and the CAMS ENSEMBLE air-quality forecast.
+If data is unavailable, the app labels the fallback rather than presenting it as live. Hourly charts use model estimates from Open-Meteo weather and CAMS air-quality data, not direct station readings. Forecasts can change and are not guaranteed to update every hour. Open-Meteo's free API has usage and non-commercial restrictions; see its terms before commercial use.
 
 ### 2.3 Real-world usage flow
 
-1. Choose the nearest city or basin from **Target location**.
-2. Set the resident or household profile: sensitivity, commute, heating, purifier, and respirator access.
-3. Read the current AQI/weather card, then start with the first three action cards: outdoor exposure, commute, and indoor air.
-4. Ask the assistant to explain a decision; it can only explain and personalize the deterministic plan.
-5. If a provider is unavailable, continue with the labelled conservative plan and verify local public-health advisories.
+1. Use **Set location** and configure relevant profile information.
+2. Open **Chat with agent**, expand **Review today’s suggested plan**, and review its actions. Ask AI to explain, then explicitly approve the list; it appears under **Today’s approved plan** and is saved in this browser.
+3. **Weather & air insights** shows hourly charts and a table with source attribution. Values are labelled model estimates, and missing hourly data is shown as unavailable.
+4. **Precaution centre** offers general AI guidance and supportive conversation; it cannot diagnose or prescribe. Questions and selected environmental context are sent to the configured AI provider when AI is used. Chat history and approved plans are stored in the browser.
+5. When data or AI is unavailable, check the visible fallback labels and local public-health advisories. Gemini's free tier has usage limits.
 
 ---
 

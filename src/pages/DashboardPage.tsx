@@ -18,6 +18,7 @@ import { DailySetup } from '../components/DailySetup';
 import { DailyAudienceCards } from '../components/DailyAudienceCards';
 import { PrecautionCenter } from '../components/PrecautionCenter';
 import { usePreferences } from '../domain/preferences';
+import { AirInsightsDashboard } from '../components/AirInsightsDashboard';
 
 const views = [
   { id: 'home', label: 'Home' },
@@ -36,17 +37,17 @@ const PROFILE_STORAGE_KEY = 'breathesafe.profile';
 
 const DEFAULT_PROFILE: UserProfile = {
   id: 'user-001',
-  name: 'Priya Sharma',
+  name: 'Resident',
   ageGroup: 'teen_adult',
-  healthConditions: ['asthma'],
+  healthConditions: ['none'],
   lifestyle: {
     commuteMode: 'transit',
     commuteDurationMinutes: 45,
     outdoorActivityLevel: 'moderate',
     homeHeatingType: 'electric_heatpump',
   },
-  hasAirPurifier: true,
-  hasN95Masks: true,
+  hasAirPurifier: false,
+  hasN95Masks: false,
 };
 
 function getStoredLocation(key: string): Location {
@@ -103,7 +104,10 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
   useEffect(() => { if (dailySetupRequest) setSetupOpen(true); }, [dailySetupRequest]);
   useEffect(() => { if (settingsRequest) setView('settings'); }, [settingsRequest]);
   useEffect(() => { if (personalRequest) setView('personal'); }, [personalRequest]);
-  const [approvedPlan, setApprovedPlan] = useState<DailyPlan | null>(null);
+  const approvedKey = `vaayudootha.approved-plan.${userId}`;
+  const [approvedPlan, setApprovedPlan] = useState<DailyPlan | null>(() => {
+    try { const saved = JSON.parse(localStorage.getItem(approvedKey) || 'null'); return saved && Array.isArray(saved.recommendations) && saved.location && saved.generatedAt ? saved as DailyPlan : null; } catch { return null; }
+  });
   const [forceFallback, setForceFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | 'all'>('all');
   const [dailyPlan, setDailyPlan] = useState<DailyPlan | null>(null);
@@ -157,11 +161,11 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
   }, [environmentService, selectedLocation, userProfile, forceFallback, refreshNonce]);
 
   const filteredRecommendations = useMemo(() => {
-    if (!dailyPlan) return [];
+    if (!approvedPlan) return [];
     return selectedCategory === 'all'
-      ? dailyPlan.recommendations
-      : dailyPlan.recommendations.filter((recommendation) => recommendation.category === selectedCategory);
-  }, [dailyPlan, selectedCategory]);
+      ? approvedPlan.recommendations
+      : approvedPlan.recommendations.filter((recommendation) => recommendation.category === selectedCategory);
+  }, [approvedPlan, selectedCategory]);
 
   const currentPlan = dailyPlan?.location === selectedLocation && dailyPlan.userProfile === userProfile
     ? dailyPlan
@@ -185,7 +189,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
         {currentPlan && (
           <div className="workspace-reading">
             <strong>{currentPlan.airQuality.isStaleOrFallback ? 'Sample ' : ''}US AQI {Math.round(currentPlan.airQuality.aqi)}</strong>
-            <span>{getRiskLevelLabel(currentPlan.overallRisk)} · {currentPlan.fallbackActive ? 'Fallback in use' : 'Model estimate'}</span>
+            <span>{getRiskLevelLabel(currentPlan.airQuality.riskLevel)} · {currentPlan.fallbackActive ? 'Fallback in use' : 'Model estimate'}</span>
           </div>
         )}
       </header>
@@ -220,7 +224,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
           )}
 
           <div className="workspace-chat" hidden={view !== 'chat'}>
-            {assistantContext && <AssistantPanel userId={userId} context={assistantContext} onApprove={() => {if(currentPlan){setApprovedPlan(currentPlan);setView('plan')}}} />}
+            {assistantContext && <AssistantPanel userId={userId} context={assistantContext} onApprove={() => {if(currentPlan){setApprovedPlan(currentPlan);persist(approvedKey, currentPlan);setSelectedCategory('all');setView('plan')}}} />}
           </div>
 
           {view === 'plan' && currentPlan && (
@@ -228,13 +232,14 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
               <div className="section-heading-row">
                 <div>
                   <h2 id="recommendations-title" className="section-title">Recommended actions</h2>
-                  <p className="section-copy">{approvedPlan ? `Approved for ${approvedPlan.location.city} on ${new Date(approvedPlan.generatedAt).toLocaleString()}. Reapprove in chat after changes.` : 'Approve the current recommendations in chat to show them here.'}</p>
+                  <p className="section-copy">{approvedPlan ? `Approved plan for ${approvedPlan.location.city} · based on conditions at ${new Date(approvedPlan.generatedAt).toLocaleString()}. Review and approve again when conditions or your routine change.` : 'Your plan is empty. Review today’s suggested actions in chat, then approve the plan to save it here.'}</p>
+                  {!approvedPlan && <button type="button" className="secondary-button" onClick={() => setView('chat')}>Go to chat and review plan →</button>}
                   {approvedPlan && <button className="secondary-button" onClick={() => {window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance(approvedPlan.recommendations.map(r=>`${r.title}. ${r.summary}`).join('. ')))}}>Read plan aloud</button>}
                 </div>
                 <div className="filter-control">
                   <label htmlFor="category-filter">Show</label>
                   <select id="category-filter" className="form-select" value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value as RecommendationCategory | 'all')}>
-                    <option value="all">All guidance ({currentPlan.recommendations.length})</option>
+                    <option value="all">All guidance ({approvedPlan?.recommendations.length ?? 0})</option>
                     <option value="outdoor_activity">Outdoor activity</option>
                     <option value="commute">Commute</option>
                     <option value="indoor_air">Indoor air</option>
@@ -244,8 +249,8 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
                 </div>
               </div>
               <div className="recommendation-list" aria-busy={isLoading} aria-label="Personalized recommendations">
-                {filteredRecommendations.length === 0 && <p className="section-copy">No actions in this category today.</p>}
-                  {approvedPlan && approvedPlan.recommendations.filter(r=>selectedCategory==='all'||r.category===selectedCategory).map((recommendation) => <RecommendationCard key={recommendation.id} recommendation={recommendation} />)}
+                {approvedPlan && filteredRecommendations.length === 0 && <p className="section-copy">No actions in this category in your approved plan.</p>}
+                {filteredRecommendations.map((recommendation) => <RecommendationCard key={recommendation.id} recommendation={recommendation} />)}
               </div>
             </section>
           )}
@@ -270,6 +275,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
                     dataSource={currentPlan.dataSource}
                     dataAttribution={currentPlan.dataAttribution}
                   />
+                  <AirInsightsDashboard location={selectedLocation} refreshNonce={refreshNonce} />
                   <FallbackBanner
                     isFallback={currentPlan.fallbackActive}
                     fallbackReason={currentPlan.fallbackReason}
@@ -288,7 +294,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
           )}
           {view === 'personal' && <section className="workspace-settings" aria-label="Personal details"><UserProfileEditor profile={userProfile} onChange={setUserProfile} /></section>}
           {view === 'safety' && <section className="card safety-sources"><h2>Safety & trusted sources</h2><p>Use today’s air and weather information to choose suitable precautions. Conditions can change during the day.</p><ul><li>Reduce strenuous outdoor activity when air quality is poor, particularly if you are sensitive to pollution.</li><li>Keep indoor air cleaner by limiting smoke and using filtration when available.</li><li>Follow your clinician’s existing advice for health conditions.</li></ul><h3>Weather updates and guidance</h3><p>Open these sources for current local warnings and news:</p><ul><li><a href="https://mausam.imd.gov.in/" target="_blank" rel="noreferrer">India Meteorological Department</a></li><li><a href="https://airquality.cpcb.gov.in/" target="_blank" rel="noreferrer">Central Pollution Control Board — air quality</a></li><li><a href="https://www.who.int/health-topics/air-pollution" target="_blank" rel="noreferrer">WHO — air pollution and health</a></li></ul></section>}
-          {view === 'precaution' && <PrecautionCenter />}
+          {view === 'precaution' && <PrecautionCenter context={assistantContext} />}
         </div>
       </div>
       <MedicalDisclaimer />

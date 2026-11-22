@@ -35,7 +35,7 @@ export function estimateInversionRisk(
 }
 
 export function assertFiniteNumber(value: unknown, label: string): number {
-  const number = typeof value === 'number' ? value : Number(value);
+  const number = typeof value === 'number' ? value : NaN;
   if (!Number.isFinite(number)) throw new Error(`Open-Meteo response missing ${label}.`);
   return number;
 }

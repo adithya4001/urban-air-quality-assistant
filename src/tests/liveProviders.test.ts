@@ -19,6 +19,11 @@ describe('live environmental providers', () => {
     expect(weatherConditionFromCode(61)).toBe('rain');
   });
 
+  it('rejects a missing AQI instead of converting it to a false zero', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ current: { us_aqi: null, pm2_5: 10, pm10: 20 } }), { status: 200 })));
+    await expect(new OpenMeteoAirQualityProvider().getAirQuality(MOCK_LOCATIONS[0])).rejects.toThrow('US AQI');
+  });
+
   it('normalizes Open-Meteo responses without leaking provider details into domain rules', async () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({

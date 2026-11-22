@@ -36,10 +36,9 @@ export class OpenMeteoAirQualityProvider implements IAirQualityProvider {
     return {
       timestamp: current.time ?? new Date().toISOString(),
       aqi: Math.max(0, Math.round(aqi)),
-      primaryPollutant: 'PM2.5',
       pm25: Math.max(0, pm25),
       pm10: Math.max(0, pm10),
-      riskLevel: riskLevelFromAqi(aqi),
+      riskLevel: riskLevelFromAqi(Math.max(0, Math.round(aqi))),
       isStaleOrFallback: false,
     };
   }

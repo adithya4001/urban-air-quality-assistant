@@ -75,7 +75,7 @@ export interface WeatherSnapshot {
 export interface AirQualitySnapshot {
   timestamp: string; // ISO 8601
   aqi: number;
-  primaryPollutant: PrimaryPollutant;
+  primaryPollutant?: PrimaryPollutant;
   pm25: number;       // ug/m3
   pm10: number;       // ug/m3
   no2?: number;       // ppb
