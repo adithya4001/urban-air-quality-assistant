@@ -1,0 +1,10 @@
+# Free-only model serving options
+
+Reviewed 2026-11-22. These are candidates, not integrations or promises of uptime, cost, quality, or availability. Verify terms, licences and hardware support before release.
+
+1. **Browser inference.** [WebLLM](https://github.com/mlc-ai/web-llm) runs supported models in the user's browser. Its [model list](https://webllm.mlc.ai/models/) estimates approximately 3.4–4.2 GB VRAM for listed Qwen3 4B variants. This puts computation and a large initial download on each user, needs compatible WebGPU hardware/browser, and cannot be assumed to work on every phone or laptop. The listed model artifact must be verified separately; a similarly named model is not proof it has the same weights as the Ollama Instruct model under evaluation.
+2. **Cloudflare Workers AI free plan.** [Pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/) describes a limited daily free allocation. It runs provider-hosted models and is not automatically a deployment of our own fine-tuned weights. Account, availability, quotas, supported models and privacy terms need verification; no Cloudflare integration has been configured.
+3. **Hugging Face Spaces.** [Current documentation](https://huggingface.co/docs/hub/spaces-overview) says creating compute-backed Gradio/Docker Spaces requires a paid plan, even though CPU Basic has no hourly charge. Static Spaces alone do not provide persistent hosted model inference; reject this route under the user's free-only constraint unless the provider terms change or an explicitly free grant becomes available.
+4. **Local Ollama.** Useful for development and evaluation. A public Vercel deployment cannot directly access a model bound to a developer's localhost, and exposing a personal machine to the internet creates availability and security work. This is not a public multi-user deployment.
+
+Image and video generation are separate capabilities with separate model, compute and licence requirements. None of these text-model notes implies those features exist.

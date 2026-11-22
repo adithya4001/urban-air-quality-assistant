@@ -30,6 +30,12 @@ function contextForTest() {
 }
 
 describe('Assistant provider boundary', () => {
+  it('sends custom questions without keyword matches to the AI provider', async () => {
+    const primary = { providerName: 'test remote', ask: vi.fn().mockResolvedValue({ answer: 'A personalised answer' }) };
+    const provider = new FallbackAssistantProvider(primary, new DemoAssistantProvider());
+    await provider.ask('Should I take my daughter to the park tomorrow?', contextForTest());
+    expect(primary.ask).toHaveBeenCalledOnce();
+  });
   it('falls back to deterministic guidance when the configured provider fails', async () => {
     const primary = {
       providerName: 'test remote',

@@ -1,0 +1,120 @@
+{
+  "kind": "small synthetic intent-classification experiment, not a generative model",
+  "training_examples": 54,
+  "held_out_examples": 12,
+  "accuracy": 0.9166666666666666,
+  "class_report": {
+    "air_quality": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "commute": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "family": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1-score": 0.6666666666666666,
+      "support": 2.0
+    },
+    "indoor": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "outdoor": {
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "f1-score": 0.8,
+      "support": 2.0
+    },
+    "weather": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "accuracy": 0.9166666666666666,
+    "macro avg": {
+      "precision": 0.9444444444444445,
+      "recall": 0.9166666666666666,
+      "f1-score": 0.9111111111111111,
+      "support": 12.0
+    },
+    "weighted avg": {
+      "precision": 0.9444444444444445,
+      "recall": 0.9166666666666666,
+      "f1-score": 0.9111111111111111,
+      "support": 12.0
+    }
+  },
+  "cases": [
+    {
+      "prompt": "Can I go jogging tomorrow?",
+      "expected": "outdoor",
+      "predicted": "outdoor"
+    },
+    {
+      "prompt": "repu jogging cheyocha",
+      "expected": "outdoor",
+      "predicted": "outdoor"
+    },
+    {
+      "prompt": "How do I keep my home air clean?",
+      "expected": "indoor",
+      "predicted": "indoor"
+    },
+    {
+      "prompt": "Should I shut my window in smog?",
+      "expected": "indoor",
+      "predicted": "indoor"
+    },
+    {
+      "prompt": "How do I get to work with less exposure?",
+      "expected": "commute",
+      "predicted": "commute"
+    },
+    {
+      "prompt": "Bus or car for my journey to office?",
+      "expected": "commute",
+      "predicted": "commute"
+    },
+    {
+      "prompt": "Can my daughter play outdoors?",
+      "expected": "family",
+      "predicted": "outdoor"
+    },
+    {
+      "prompt": "How do I protect my older father?",
+      "expected": "family",
+      "predicted": "family"
+    },
+    {
+      "prompt": "Will it rain tomorrow?",
+      "expected": "weather",
+      "predicted": "weather"
+    },
+    {
+      "prompt": "Is tomorrow morning cold?",
+      "expected": "weather",
+      "predicted": "weather"
+    },
+    {
+      "prompt": "What does AQI mean?",
+      "expected": "air_quality",
+      "predicted": "air_quality"
+    },
+    {
+      "prompt": "Why is the air polluted?",
+      "expected": "air_quality",
+      "predicted": "air_quality"
+    }
+  ],
+  "limitations": "Synthetic, tiny, nonrepresentative English/Hindi/Telugu romanized examples. No clinical or multilingual validation. Do not use to gate questions or make health decisions."
+}

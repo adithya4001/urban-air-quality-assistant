@@ -11,6 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@clerk/backend": "^3.31.4",
     "@clerk/react": "6.19.4",
     "@types/leaflet": "^1.9.22",
     "leaflet": "^1.9.4",

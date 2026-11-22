@@ -1,5 +1,6 @@
 import { AssistantContext, AssistantReply, buildAssistantReply } from '../domain/assistant';
 import { isInScope, scopeReply } from '../domain/scope';
+import { urgentSafetyReply } from '../domain/urgentSafety';
 
 export interface IAssistantProvider {
   readonly providerName: string;
@@ -35,12 +36,13 @@ function isAssistantReply(value: unknown): value is AssistantReply {
 export class RemoteAssistantProvider implements IAssistantProvider {
   public readonly providerName = 'Server assistant with local safety fallback';
 
-  constructor(private readonly endpoint: string) {}
+  constructor(private readonly endpoint: string, private readonly getToken?: () => Promise<string | null>) {}
 
   public async ask(question: string, context: AssistantContext, history: Array<{question:string;answer:string}> = []): Promise<AssistantReply> {
+    const token = await this.getToken?.();
     const response = await fetch(this.endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({ question, context, history: history.slice(-6) }),
     });
     if (!response.ok) throw new Error(`Assistant endpoint returned ${response.status}`);
@@ -49,7 +51,7 @@ export class RemoteAssistantProvider implements IAssistantProvider {
     return {
       ...payload,
       source: response.headers.get('X-BreatheSafe-Source') === 'ai-gateway-with-deterministic-guardrails'
-        ? 'genai' : 'rules',
+        ? 'genai' : response.headers.get('X-BreatheSafe-Source') === 'urgent-safety' ? 'safety' : 'rules',
     };
   }
 }
@@ -64,7 +66,8 @@ export class FallbackAssistantProvider implements IAssistantProvider {
   ) {}
 
   public async ask(question: string, context: AssistantContext, history: Array<{question:string;answer:string}> = []): Promise<AssistantReply> {
-    if (!isInScope(question, history)) return scopeReply();
+    const urgent = urgentSafetyReply(question);
+    if (urgent) return urgent;
     try {
       return await this.primary.ask(question, context, history);
     } catch {
@@ -73,12 +76,12 @@ export class FallbackAssistantProvider implements IAssistantProvider {
   }
 }
 
-export function createAssistantProvider(): IAssistantProvider {
+export function createAssistantProvider(getToken?: () => Promise<string | null>): IAssistantProvider {
   const endpoint = import.meta.env.VITE_ASSISTANT_ENDPOINT?.trim()
     || (import.meta.env.PROD ? '/api/assistant' : '');
   const fallback = new DemoAssistantProvider();
   return endpoint
-    ? new FallbackAssistantProvider(new RemoteAssistantProvider(endpoint), fallback)
+    ? new FallbackAssistantProvider(new RemoteAssistantProvider(endpoint, getToken), fallback)
     : fallback;
 }
 
