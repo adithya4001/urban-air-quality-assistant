@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AssistantContext, AssistantReply } from '../domain/assistant';
 import { createAssistantProvider } from '../services/AssistantService';
 import { usePreferences } from '../domain/preferences';

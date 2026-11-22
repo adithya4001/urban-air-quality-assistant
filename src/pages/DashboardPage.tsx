@@ -175,10 +175,11 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
     : null;
 
   return (
-    <main id="main-content" className={`main-content resident-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} tabIndex={-1}>
+    <main id="main-content" aria-labelledby="workspace-page-title" className={`main-content resident-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} tabIndex={-1}>
+      <h1 id="workspace-page-title" className="sr-only">{views.find(({ id }) => id === view)?.label ?? 'Home'}</h1>
       <nav id="daily-sidebar" className="daily-sidebar" aria-label="Main navigation" hidden={!sidebarOpen}>
         <p>YOUR AIR COMPANION</p>
-        {views.filter(({id}) => id !== 'settings' && id !== 'personal').map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
+        {views.filter(({id}) => id !== 'settings' && id !== 'personal').map(({id,label}) => <button key={id} type="button" className={view===id?'selected':''} aria-current={view===id ? 'page' : undefined} aria-controls="workspace-content" onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
       </nav>
       <div className="daily-main-area">
       <header className={`workspace-summary ${view !== 'insights' ? 'dashboard-home-hidden' : ''}`}>
@@ -209,7 +210,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
 
       <div className="workspace-layout">
 
-        <div className="workspace-content">
+        <div className="workspace-content" id="workspace-content">
           {view !== 'settings' && view !== 'personal' && loadError && (
             <div className="error-banner" role="alert">
               <p>{loadError}</p>

@@ -1,4 +1,3 @@
-import React from 'react';
 import type { HourlyPoint } from '../services/HourlyInsights';
 
 type Day = { date:string; min:number; max:number; avg:number };

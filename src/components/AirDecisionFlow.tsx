@@ -28,7 +28,7 @@ export function AirDecisionFlow() {
   const [active, setActive] = useState(0);
 
   return (
-    <div className="story-visual" aria-label="How VaayuDootha turns context into action">
+    <div className="story-visual" role="group" aria-label="How VaayuDootha turns context into action">
       <div className="story-photo">
         {steps.map((step, index) => (
           <img key={step.title} src={step.image} alt="" loading="lazy" decoding="async"
@@ -36,7 +36,7 @@ export function AirDecisionFlow() {
           />
         ))}
       </div>
-      <div className="story-steps" aria-label="Explore the steps">
+      <div className="story-steps" role="group" aria-label="Explore the steps">
         {steps.map((step, index) => (
           <div className="story-step" key={step.title}>
             <button

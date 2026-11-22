@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Location } from '../domain/types';
 import { fetchHourlyInsights, type HourlyPoint } from '../services/HourlyInsights';
 import './AirInsightsDashboard.css';

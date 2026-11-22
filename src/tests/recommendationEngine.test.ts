@@ -141,8 +141,10 @@ describe('Deterministic Recommendation Engine', () => {
       expect(outdoorRec?.safetyNotice).toContain('breathing difficulty');
 
       const ppeRec = plan.recommendations.find((r) => r.category === 'protective_equipment');
-      expect(ppeRec?.title).toContain('N95 / FFP2');
-      expect(ppeRec?.priority).toBe('critical');
+      expect(ppeRec?.title).toContain('Particulate Respirator');
+      expect(ppeRec?.summary).toContain('does not filter gases');
+      expect(ppeRec?.priority).toBe('high');
+      expect(ppeRec?.safetyNotice).toContain('clinician’s advice');
     });
 
     it('recommends mass transit and eco-driving for solo car drivers during smog', () => {
@@ -157,6 +159,95 @@ describe('Deterministic Recommendation Engine', () => {
       expect(commuteRec).toBeDefined();
       expect(commuteRec?.healthImpact).toBeTruthy();
       expect(commuteRec?.environmentalImpact).toBeTruthy();
+    });
+
+    it('keeps a remote worker’s commute plan remote rather than prescribing a commute', () => {
+      const remoteProfile: UserProfile = {
+        ...healthyAdultProfile,
+        lifestyle: { ...healthyAdultProfile.lifestyle, commuteMode: 'wfh' },
+      };
+      const plan = generateDailyPlan(baseLocation, remoteProfile, hazardousSmogAqi, severeInversionWeather);
+      const commute = plan.recommendations.find((item) => item.category === 'commute');
+
+      expect(commute?.title).toContain('Remote');
+      expect(commute?.actionItems.join(' ').toLowerCase()).not.toContain('mass transit');
+      expect(commute?.actionItems.join(' ').toLowerCase()).toContain('essential trip');
+    });
+
+    it('adapts active commuters’ actions when air quality is elevated', () => {
+      const activeProfile: UserProfile = {
+        ...healthyAdultProfile,
+        lifestyle: { ...healthyAdultProfile.lifestyle, commuteMode: 'cycling' },
+      };
+      const elevatedAqi: AirQualitySnapshot = { ...moderateAqi, aqi: 164, riskLevel: 'unhealthy' };
+      const plan = generateDailyPlan(baseLocation, activeProfile, elevatedAqi, clearWeather);
+      const commute = plan.recommendations.find((item) => item.category === 'commute');
+
+      expect(commute?.title).toContain('Active Commute');
+      expect(commute?.actionItems.join(' ').toLowerCase()).toContain('public transit');
+      expect(commute?.actionItems.join(' ').toLowerCase()).toContain('hourly');
+    });
+
+    it.each([
+      ['car', 'Limit Traffic Exposure', 'recirculation'],
+      ['transit', 'Reduce Roadside Waiting', 'wait indoors'],
+    ] as const)('gives %s commuters exposure guidance at unhealthy AQI', (mode, title, action) => {
+      const profile: UserProfile = {
+        ...healthyAdultProfile,
+        lifestyle: { ...healthyAdultProfile.lifestyle, commuteMode: mode },
+      };
+      const elevatedAqi: AirQualitySnapshot = { ...moderateAqi, aqi: 164, riskLevel: 'unhealthy' };
+      const plan = generateDailyPlan(baseLocation, profile, elevatedAqi, clearWeather);
+      const commute = plan.recommendations.find((item) => item.category === 'commute');
+
+      expect(commute?.title).toContain(title);
+      expect(commute?.actionItems.join(' ').toLowerCase()).toContain(action);
+      expect(commute?.priority).toBe('high');
+    });
+
+    it('keeps a favorable AQI rating while advising a fresh check during an inversion', () => {
+      const inversionWeather: WeatherSnapshot = { ...clearWeather, inversionRisk: 'severe' };
+      const plan = generateDailyPlan(baseLocation, healthyAdultProfile, lowAqi, inversionWeather);
+      const outdoor = plan.recommendations.find((item) => item.category === 'outdoor_activity');
+
+      expect(plan.overallRisk).toBe('low');
+      expect(outdoor?.title).toContain('Recheck Conditions');
+      expect(outdoor?.summary).toContain('current AQI is within acceptable limits');
+      expect(outdoor?.actionItems.join(' ').toLowerCase()).toContain('hourly air-quality forecast');
+    });
+
+    it('changes outdoor actions to match a resident’s activity pattern', () => {
+      const activeProfile: UserProfile = {
+        ...healthyAdultProfile,
+        lifestyle: { ...healthyAdultProfile.lifestyle, outdoorActivityLevel: 'high' },
+      };
+      const lowActivityProfile: UserProfile = {
+        ...healthyAdultProfile,
+        lifestyle: { ...healthyAdultProfile.lifestyle, outdoorActivityLevel: 'low' },
+      };
+      const activePlan = generateDailyPlan(baseLocation, activeProfile, hazardousSmogAqi, severeInversionWeather);
+      const lowActivityPlan = generateDailyPlan(baseLocation, lowActivityProfile, hazardousSmogAqi, severeInversionWeather);
+      const activeAdvice = activePlan.recommendations.find((item) => item.category === 'outdoor_activity');
+      const lowActivityAdvice = lowActivityPlan.recommendations.find((item) => item.category === 'outdoor_activity');
+
+      expect(activeAdvice?.actionItems[0]).toContain('Move runs');
+      expect(lowActivityAdvice?.actionItems[0]).toContain('Keep essential outdoor time brief');
+    });
+
+    it('always returns one complete recommendation for every supported category', () => {
+      const plan = generateDailyPlan(baseLocation, healthyAdultProfile, lowAqi, clearWeather);
+      const categories = plan.recommendations.map((recommendation) => recommendation.category);
+
+      expect(categories).toEqual([
+        'outdoor_activity', 'commute', 'indoor_air', 'protective_equipment', 'emission_reduction',
+      ]);
+      for (const recommendation of plan.recommendations) {
+        expect(recommendation.id).toBeTruthy();
+        expect(recommendation.actionItems.length).toBeGreaterThan(0);
+        expect(recommendation.healthImpact).toBeTruthy();
+        expect(recommendation.environmentalImpact).toBeTruthy();
+        expect(recommendation.sourceGuidance).toBeTruthy();
+      }
     });
 
     it('flags wood/biomass heating and recommends filtration for home indoor air', () => {
@@ -185,7 +276,20 @@ describe('Deterministic Recommendation Engine', () => {
       expect(plan.overallRisk).toBe('low');
       const ppeRec = plan.recommendations.find((r) => r.category === 'protective_equipment');
       expect(ppeRec?.priority).toBe('low');
-      expect(ppeRec?.title).toContain('Not Required');
+      expect(ppeRec?.title).toContain('No AQI-Based');
+    });
+
+    it('does not recommend particle respirators as protection for a gas-led AQI', () => {
+      const gasLedAqi: AirQualitySnapshot = {
+        ...hazardousSmogAqi,
+        primaryPollutant: 'NO2',
+      };
+      const plan = generateDailyPlan(baseLocation, healthyAdultProfile, gasLedAqi, clearWeather);
+      const ppe = plan.recommendations.find((item) => item.category === 'protective_equipment');
+
+      expect(ppe?.title).toContain('No AQI-Based');
+      expect(ppe?.summary).toContain('filter particles, not gases');
+      expect(ppe?.actionItems.join(' ').toLowerCase()).toContain('do not rely on an n95/ffp2');
     });
 
     it('flags fallback state accurately when fallback is active', () => {

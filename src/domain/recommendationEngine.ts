@@ -70,11 +70,11 @@ export function calculateEffectiveRiskLevel(
  */
 function evaluateOutdoorActivity(
   effectiveRisk: RiskLevel,
-  aqiSnapshot: AirQualitySnapshot,
   weather: WeatherSnapshot,
   profile: UserProfile
 ): Recommendation {
   const isSensitive = isUserVulnerable(profile);
+  const activityLevel = profile.lifestyle.outdoorActivityLevel;
 
   if (effectiveRisk === 'hazardous' || effectiveRisk === 'very_unhealthy') {
     return {
@@ -85,7 +85,11 @@ function evaluateOutdoorActivity(
       summary:
         'Poor air quality can affect everyone. Consider reducing outdoor exposure, especially during strenuous activity.',
       actionItems: [
-        'Cancel outdoor workouts, runs, and walks; switch to indoor stretching or light aerobics.',
+        activityLevel === 'high'
+          ? 'Move runs, cycling workouts, and other strenuous exercise indoors until air improves.'
+          : activityLevel === 'moderate'
+            ? 'Replace planned outdoor walks or exercise with a shorter, gentle indoor activity.'
+            : 'Keep essential outdoor time brief; skip optional outdoor recreation until air improves.',
         isSensitive
           ? 'Keep any prescribed inhalers or other medication accessible and follow your existing care plan.'
           : 'Minimize outdoor transit time; avoid prolonged exertion outside.',
@@ -113,7 +117,11 @@ function evaluateOutdoorActivity(
       summary:
         'Elevated particle concentrations can irritate the respiratory system, especially during heavy breathing.',
       actionItems: [
-        'Shift jogging or cycling indoors, or replace with low-intensity walking.',
+        activityLevel === 'high'
+          ? 'Move vigorous workouts indoors or shorten them and reduce intensity.'
+          : activityLevel === 'moderate'
+            ? 'Choose an easier, shorter walk and avoid vigorous outdoor exercise.'
+            : 'Before a longer outdoor activity, check the hourly forecast and choose a cleaner period.',
         'Check the hourly air-quality forecast and choose a cleaner time when practical.',
         isSensitive
           ? 'Reduce exposure duration where practical and follow your clinician’s advice if symptoms occur.'
@@ -131,12 +139,17 @@ function evaluateOutdoorActivity(
     id: 'rec-outdoor-acceptable',
     category: 'outdoor_activity',
     priority: 'low',
-    title: 'Outdoor Activities Favorable',
-    summary:
-      'Air quality is within acceptable limits for most residents. Normal outdoor routines may proceed.',
+    title: weather.inversionRisk === 'none'
+      ? 'Outdoor Activities Favorable'
+      : 'Outdoor Activities Favorable · Recheck Conditions',
+    summary: weather.inversionRisk === 'none'
+      ? 'Air quality is within acceptable limits for most residents. Normal outdoor routines may proceed.'
+      : 'The current AQI is within acceptable limits for most residents, but stagnant winter conditions can change. Check the latest local air update before strenuous activity.',
     actionItems: [
-      'Enjoy outdoor walks, commuting, and recreational sports.',
-      'Maintain awareness if cold weather worsens or localized smoke plumes appear.',
+      weather.inversionRisk === 'none'
+        ? 'Enjoy outdoor walks, commuting, and recreational sports.'
+        : 'Continue comfortable outdoor routines and recheck the hourly air-quality forecast before strenuous activity.',
+      'Check again if conditions change or you notice a nearby smoke or dust source.',
     ],
     healthImpact:
       'Supports normal activity while keeping particulate exposure lower under the current scenario.',
@@ -156,6 +169,74 @@ function evaluateCommute(
 ): Recommendation {
   const currentMode = profile.lifestyle.commuteMode;
 
+  if (currentMode === 'wfh') {
+    return {
+      id: 'rec-commute-remote',
+      category: 'commute',
+      priority: effectiveRisk === 'hazardous' || effectiveRisk === 'very_unhealthy' ? 'high' : 'low',
+      title: 'Keep Today’s Routine Remote',
+      summary: 'Your work-from-home routine already avoids a commute; keep unnecessary trips flexible around local air conditions.',
+      actionItems: [
+        effectiveRisk === 'hazardous' || effectiveRisk === 'very_unhealthy'
+          ? 'If an essential trip is needed, shorten time outdoors and check the latest local air update first.'
+          : 'Combine errands into one trip when practical.',
+        'Keep indoor smoke sources low and ventilate when outdoor air is cleaner.',
+      ],
+      healthImpact: 'Avoiding a required commute can reduce time spent near traffic emissions.',
+      environmentalImpact: 'Skipping an unnecessary vehicle trip avoids its local exhaust emissions.',
+      sourceGuidance: 'Open-Meteo modelled air-quality context and EPA activity guidance',
+    };
+  }
+
+  if ((effectiveRisk === 'unhealthy' || effectiveRisk === 'unhealthy_sensitive')
+    && (currentMode === 'walking' || currentMode === 'cycling')) {
+    return {
+      id: 'rec-commute-active-elevated',
+      category: 'commute',
+      priority: 'high',
+      title: 'Reduce Exposure on an Active Commute',
+      summary: 'Keep essential travel practical while limiting strenuous effort and time beside busy roads.',
+      actionItems: [
+        'Consider public transit or a shared ride for the longest part of the trip, if available.',
+        'Choose a quieter route and avoid hard cycling or brisk walking when air quality is elevated.',
+        'Check the hourly air-quality forecast before choosing an outdoor time window.',
+      ],
+      healthImpact: 'Reducing exertion and roadside time can lower the amount of polluted air inhaled.',
+      environmentalImpact: 'Using shared transport for part of a trip can reduce single-occupant vehicle emissions.',
+      sourceGuidance: 'EPA AirNow activity recommendations and local modelled air-quality forecast',
+    };
+  }
+
+  if ((effectiveRisk === 'unhealthy' || effectiveRisk === 'unhealthy_sensitive')
+    && (currentMode === 'car' || currentMode === 'transit')) {
+    const isCar = currentMode === 'car';
+    return {
+      id: isCar ? 'rec-commute-car-elevated' : 'rec-commute-transit-elevated',
+      category: 'commute',
+      priority: 'high',
+      title: isCar ? 'Limit Traffic Exposure on Your Drive' : 'Reduce Roadside Waiting on Transit',
+      summary: isCar
+        ? 'Keep necessary travel practical and limit time in slow or congested traffic while air quality is elevated.'
+        : 'Keep the shared-transit commute, while reducing time waiting beside busy roads when practical.',
+      actionItems: isCar
+        ? [
+            'Avoid unnecessary trips and prolonged idling; combine essential stops when practical.',
+            'Use cabin recirculation briefly in heavy traffic if safe, then allow fresh air periodically to avoid stale cabin air.',
+            'Check the hourly air-quality forecast before choosing a longer travel window.',
+          ]
+        : [
+            'Wait indoors or farther from traffic where practical, and board promptly rather than waiting beside a busy road.',
+            'Choose a less traffic-exposed walking route to and from stops when practical.',
+            'Check the hourly air-quality forecast before a longer outdoor wait or walk.',
+          ],
+      healthImpact: 'Reducing time close to traffic and limiting unnecessary exposure can lower the amount of polluted air inhaled.',
+      environmentalImpact: isCar
+        ? 'Combining essential stops and avoiding idling can reduce avoidable fuel use and local exhaust.'
+        : 'Shared transit carries multiple passengers per trip and can reduce per-person travel emissions.',
+      sourceGuidance: 'EPA AirNow activity guidance and local modelled air-quality forecast',
+    };
+  }
+
   if (effectiveRisk === 'hazardous' || effectiveRisk === 'very_unhealthy') {
     return {
       id: 'rec-commute-hazardous',
@@ -167,7 +248,7 @@ function evaluateCommute(
       actionItems: [
         currentMode === 'cycling' || currentMode === 'walking'
           ? 'Switch from walking/cycling to subway/bus, carpool, or work remotely if permitted.'
-          : 'Keep vehicle ventilation on internal recirculation mode to block roadside particulate intake.',
+          : 'In heavy traffic, use cabin recirculation briefly if safe; periodically allow fresh air to avoid stale cabin air.',
         'If travelling on foot or public platforms, wear a snug-fitting N95/FFP2 respirator.',
       ],
       healthImpact:
@@ -207,10 +288,12 @@ function evaluateCommute(
     summary:
       'Your commute strategy supports both your personal wellbeing and lower community emissions.',
     actionItems: [
-      'Continue utilizing active travel or electrified mass transit.',
+      currentMode === 'transit'
+        ? 'Continue using shared transit where it suits your route; limit time waiting beside busy roads.'
+        : 'Use a lower-traffic route and keep outdoor effort comfortable for the current air conditions.',
       weather.temperatureC < 5
-        ? 'Dress in windproof thermal layers to preserve respiratory tract temperature.'
-        : 'Stay hydrated during morning travel.',
+        ? 'Dress warmly for the cold and wind; clothing does not filter polluted air.'
+        : 'Check the latest air update before a longer outdoor trip.',
     ],
     healthImpact: 'Maintains daily physical activity benchmarks.',
     environmentalImpact: 'Active travel and shared transport can reduce direct tailpipe emissions for the trip.',
@@ -223,9 +306,7 @@ function evaluateCommute(
  */
 function evaluateIndoorAir(
   effectiveRisk: RiskLevel,
-  aqiSnapshot: AirQualitySnapshot,
-  profile: UserProfile,
-  weather: WeatherSnapshot
+  profile: UserProfile
 ): Recommendation {
   const hasPurifier = profile.hasAirPurifier;
   const isBiomassHeating = profile.lifestyle.homeHeatingType === 'wood_biomass';
@@ -233,13 +314,9 @@ function evaluateIndoorAir(
   const actionItems: string[] = [];
 
   if (hasPurifier) {
-    actionItems.push(
-      'Run HEPA air purifiers continuously on medium/high in bedrooms and living rooms.'
-    );
+    actionItems.push('Use a portable HEPA air cleaner in occupied rooms and follow its sizing and filter instructions.');
   } else {
-    actionItems.push(
-      'Consider installing a certified True HEPA filtration unit or a low-cost DIY Corsi-Rosenthal box.'
-    );
+    actionItems.push('If feasible, consider a correctly sized portable HEPA air cleaner or a safely built DIY Corsi-Rosenthal box.');
   }
 
   if (effectiveRisk === 'hazardous' || effectiveRisk === 'very_unhealthy') {
@@ -266,7 +343,7 @@ function evaluateIndoorAir(
     id: 'rec-indoor-air',
     category: 'indoor_air',
     priority: effectiveRisk === 'hazardous' || effectiveRisk === 'very_unhealthy' ? 'high' : 'medium',
-    title: 'Optimize Indoor Air Purification & Seal Integrity',
+    title: 'Keep Indoor Air as Clean as Practical',
     summary:
       'Indoor air can quickly deteriorate during winter smog due to infiltration and internal combustion sources.',
     actionItems,
@@ -274,7 +351,7 @@ function evaluateIndoorAir(
       'Appropriately sized particle filtration can reduce indoor particle exposure; results depend on the room and equipment.',
     environmentalImpact:
       'Limiting supplemental wood burning reduces soot and fine-particle emissions in the local airshed.',
-    sourceGuidance: 'EPA Indoor Air Quality Building Guidelines & CDC Smog Protocols',
+    sourceGuidance: 'US EPA indoor air quality and air-cleaner guidance',
   };
 }
 
@@ -316,49 +393,54 @@ function evaluateEmissionReduction(
  */
 function evaluateProtectiveEquipment(
   effectiveRisk: RiskLevel,
+  aqiSnapshot: AirQualitySnapshot,
   profile: UserProfile
 ): Recommendation {
-  const needsRespirator =
-    effectiveRisk === 'unhealthy' ||
-    effectiveRisk === 'very_unhealthy' ||
-    effectiveRisk === 'hazardous';
+  const elevatedRisk = ['unhealthy', 'very_unhealthy', 'hazardous'].includes(effectiveRisk);
+  const particulatePollution = aqiSnapshot.primaryPollutant === 'PM2.5'
+    || aqiSnapshot.primaryPollutant === 'PM10';
 
-  if (!needsRespirator) {
+  if (!elevatedRisk || !particulatePollution) {
+    const gasLedAqi = elevatedRisk && aqiSnapshot.primaryPollutant;
     return {
       id: 'rec-ppe-not-needed',
       category: 'protective_equipment',
       priority: 'low',
-      title: 'Protective Masks Not Required',
-      summary: 'Air quality levels do not warrant particulate-filtering respirators at this time.',
-      actionItems: ['No specialized respiratory protection required for ambient air.'],
-      healthImpact: 'Allows unrestricted natural breathing.',
+      title: 'No AQI-Based Particulate Respirator Advice',
+      summary: gasLedAqi
+        ? `${aqiSnapshot.primaryPollutant} is the reported primary pollutant. Particulate respirators filter particles, not gases; follow local public-health advice and reduce exposure using the AQI guidance.`
+        : 'The current AQI alone does not indicate a need for additional particulate respiratory protection.',
+      actionItems: [gasLedAqi
+        ? 'Do not rely on an N95/FFP2 to protect against gases; follow the local AQI advice and reduce exposure.'
+        : 'No additional particulate-respirator step is indicated by the current AQI alone.'],
+      healthImpact: 'Keeps protective-equipment advice matched to the reported pollutant and current AQI.',
       environmentalImpact: 'Conserves disposable PPE supplies, reducing solid waste.',
-      sourceGuidance: 'WHO Personal Protection Guidance',
+      sourceGuidance: 'EPA AirNow AQI guidance; CDC/NIOSH particulate-respirator guidance',
     };
   }
 
   return {
     id: 'rec-ppe-respirator',
     category: 'protective_equipment',
-    priority: effectiveRisk === 'hazardous' ? 'critical' : 'high',
-    title: 'Wear Certified Particulate Respirator (N95 / FFP2 / KF94)',
+    priority: effectiveRisk === 'hazardous' ? 'high' : 'medium',
+    title: 'Consider a Well-Fitting Particulate Respirator',
     summary:
-      'A well-fitting certified respirator can reduce particle exposure; loose-fitting masks generally provide less protection.',
+      'When particle pollution is elevated and outdoor exposure cannot be avoided, a well-fitting certified N95/FFP2 may reduce particle exposure. It does not filter gases and does not replace reducing time outdoors.',
     actionItems: [
-      'Don a certified N95, FFP2, or KF94 respirator before stepping outdoors.',
-      'Ensure a secure, gap-free seal around the bridge of the nose and chin.',
+      'Follow local health advice; if you choose to wear one, use a certified particulate respirator that fits closely over the nose and under the chin.',
+      'Check the fit each time and follow the manufacturer’s use and replacement instructions.',
       profile.hasN95Masks
-        ? 'Replace disposable respirators when damaged, dirty, damp, or difficult to breathe through, following manufacturer guidance.'
-        : 'Procure NIOSH-approved or CE-certified respirators from authorized pharmacies.',
-      'Cloth masks, scarves, and loose surgical masks generally provide less protection from fine particles.',
+        ? 'Replace it when damaged, dirty, damp, or difficult to breathe through, following manufacturer guidance.'
+        : 'If you need one, buy from a reputable supplier and check the certification marking and fit.',
     ],
     healthImpact:
-      'Certified respirators are designed to filter fine particles when correctly selected, fitted, and worn.',
+      'A correctly selected and fitted particulate respirator can reduce particle exposure; performance varies with fit and use.',
     environmentalImpact:
       'Reusable elastomeric or correctly maintained respirators reduce single-use plastic waste.',
-    safetyNotice:
-      'Individuals with severe chronic respiratory or cardiac conditions should confirm with their physician before wearing tightly-sealed respirators, as they may increase breathing resistance.',
-    sourceGuidance: 'CDC / NIOSH Respiratory Protection Protocols',
+    safetyNotice: isUserVulnerable(profile)
+      ? 'If you have a heart or lung condition, follow your clinician’s advice before using a tight-fitting respirator. Seek cleaner air and follow local AQI guidance first.'
+      : undefined,
+    sourceGuidance: 'EPA AirNow AQI guidance; CDC/NIOSH particulate-respirator guidance',
   };
 }
 
@@ -379,10 +461,10 @@ export function generateDailyPlan(
   const effectiveRisk = calculateEffectiveRiskLevel(aqiSnapshot, profile);
 
   const recommendations: Recommendation[] = [
-    evaluateOutdoorActivity(effectiveRisk, aqiSnapshot, weather, profile),
+    evaluateOutdoorActivity(effectiveRisk, weather, profile),
     evaluateCommute(effectiveRisk, profile, weather),
-    evaluateIndoorAir(effectiveRisk, aqiSnapshot, profile, weather),
-    evaluateProtectiveEquipment(effectiveRisk, profile),
+    evaluateIndoorAir(effectiveRisk, profile),
+    evaluateProtectiveEquipment(effectiveRisk, aqiSnapshot, profile),
     evaluateEmissionReduction(profile, weather),
   ];
 
