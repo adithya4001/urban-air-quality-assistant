@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AssistantContext, AssistantReply } from '../domain/assistant';
 import { createAssistantProvider } from '../services/AssistantService';
+import { usePreferences } from '../domain/preferences';
 
 interface AssistantPanelProps {
   context: AssistantContext;
@@ -15,6 +16,7 @@ const quickQuestions = [
 ];
 
 export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context, onApprove }) => {
+  const {prefs} = usePreferences();
   const [question, setQuestion] = useState('');
   const [turns, setTurns] = useState<Array<{ question: string; reply: AssistantReply }>>([]);
   const [isAsking, setIsAsking] = useState(false);
@@ -44,6 +46,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context, onAppro
     try {
       const reply = await provider.ask(trimmed, context);
       setTurns((previous) => [...previous, { question: trimmed, reply }]);
+      if (prefs.autoRead && 'speechSynthesis' in window) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply.answer)); }
     } catch {
       setProviderError('The assistant could not answer right now. Open Action plan for your recommendations.');
     } finally {
@@ -74,13 +77,13 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context, onAppro
         }}>{remindersOn ? 'On' : 'Enable reminder'}</button>
       </div>
 
-      <div className="quick-question-list" aria-label="Suggested questions">
+      {prefs.quickQuestions && <div className="quick-question-list" aria-label="Suggested questions">
         {quickQuestions.map((item) => (
           <button key={item} type="button" className="chip-button" disabled={isAsking} onClick={() => ask(item)}>
             {item}
           </button>
         ))}
-      </div>
+      </div>}
 
       <div className="conversation" role="log" aria-label="Conversation">
       {turns.map(({ question: asked, reply }, index) => (
@@ -89,12 +92,13 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context, onAppro
           <div className="assistant-answer">
             <span className="reply-source">{reply.source === 'genai' ? 'GenAI explanation' : 'Rule-based guidance'}</span>
             <p className="answer-lead">{reply.answer}</p>
-            <div className="answer-grid">
+            {prefs.replyDetails && <><div className="answer-grid">
               <div><h3>Do this next</h3><ul>{reply.keyActions.map((action) => <li key={action}>{action}</li>)}</ul></div>
               <div><h3>Why it matters</h3><p>{reply.whyItMatters}</p></div>
             </div>
             <p className="safety-note">{reply.safetyNote}</p>
-            <p className="source-note">{reply.sourceGuidance}</p>
+            <p className="source-note">{reply.sourceGuidance}</p></>}
+            {!prefs.replyDetails && <p className="safety-note">{reply.safetyNote}</p>}
           </div>
         </div>
       ))}

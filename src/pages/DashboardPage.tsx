@@ -17,6 +17,7 @@ import { getRiskLevelLabel } from '../utils/formatters';
 import { DailySetup } from '../components/DailySetup';
 import { DailyAudienceCards } from '../components/DailyAudienceCards';
 import { PrecautionCenter } from '../components/PrecautionCenter';
+import { usePreferences } from '../domain/preferences';
 
 const views = [
   { id: 'home', label: 'Home' },
@@ -84,6 +85,7 @@ function persist(key: string, value: unknown) {
 }
 
 export const DashboardPage: React.FC<{ userId: string; initialView?: View; settingsRequest?: number; personalRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ userId, initialView, settingsRequest, personalRequest, sidebarOpen, setSidebarOpen }) => {
+  const {prefs} = usePreferences();
   const environmentService = useMemo(
     () => new EnvironmentService(
       new OpenMeteoAirQualityProvider(),
@@ -116,9 +118,10 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
   useEffect(() => persist(profileKey, userProfile), [userProfile, profileKey]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setRefreshNonce((value) => value + 1), 30 * 60 * 1000);
+    if (prefs.refreshMinutes === 'off') return;
+    const timer = window.setInterval(() => setRefreshNonce((value) => value + 1), Number(prefs.refreshMinutes) * 60 * 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [prefs.refreshMinutes]);
 
   useEffect(() => {
     let cancelled = false;
