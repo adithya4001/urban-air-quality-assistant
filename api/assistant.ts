@@ -26,7 +26,15 @@ function json(data: unknown, status = 200, source = 'deterministic-safety-fallba
 function isContext(value: unknown): value is AssistantContext {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<AssistantContext>;
-  return Boolean(candidate.profile && candidate.airQuality && candidate.weather && candidate.plan);
+  const plan = candidate.plan;
+  return Boolean(candidate.profile && Array.isArray(candidate.profile.healthConditions)
+    && candidate.airQuality && Number.isFinite(candidate.airQuality.aqi)
+    && candidate.weather && Number.isFinite(candidate.weather.temperatureC)
+    && plan && plan.location && typeof plan.location.city === 'string'
+    && typeof plan.overallRisk === 'string' && Array.isArray(plan.recommendations)
+    && plan.recommendations.length <= 25
+    && plan.recommendations.every(item => item && typeof item.category === 'string'
+      && Array.isArray(item.actionItems) && item.actionItems.length <= 20));
 }
 
 function isExplanation(value: unknown): value is Pick<AssistantReply, 'answer' | 'whyItMatters'> {
@@ -199,9 +207,13 @@ export default {
       return json({ error: 'Session could not be verified' }, 401);
     }
 
+    const declaredLength = Number(request.headers.get('content-length'));
+    if (Number.isFinite(declaredLength) && declaredLength > 65536) return json({ error: 'Request too large' }, 413);
     let body: unknown;
     try {
-      body = await request.json();
+      const raw = await request.text();
+      if (new TextEncoder().encode(raw).length > 65536) return json({ error: 'Request too large' }, 413);
+      body = JSON.parse(raw);
     } catch {
       return json({ error: 'Request body must be valid JSON' }, 400);
     }

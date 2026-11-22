@@ -15,6 +15,15 @@ describe('assistant API', () => {
     expect(response.status).toBe(401);
   });
 
+  it('rejects malformed contexts and oversized requests', async () => {
+    vi.stubEnv('CLERK_SECRET_KEY', 'test-secret');
+    const headers = { Authorization: 'Bearer session', 'Content-Type': 'application/json' };
+    const malformed = await assistant.fetch(new Request('http://localhost/api/assistant', { method: 'POST', headers, body: JSON.stringify({ question: 'How is the air?', context: { profile: {}, airQuality: {}, weather: {}, plan: {} } }) }));
+    expect(malformed.status).toBe(400);
+    const oversized = await assistant.fetch(new Request('http://localhost/api/assistant', { method: 'POST', headers, body: JSON.stringify({ question: 'air', padding: 'x'.repeat(66000) }) }));
+    expect(oversized.status).toBe(413);
+  });
+
   it('uses the server-side Gemini key and returns its explanation', async () => {
     vi.stubEnv('CLERK_SECRET_KEY', 'test-secret');
     vi.stubEnv('GEMINI_API_KEY', 'test-key');
