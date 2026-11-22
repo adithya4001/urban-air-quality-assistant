@@ -26,6 +26,7 @@ const views = [
   { id: 'safety', label: 'Safety & sources' },
   { id: 'precaution', label: 'Precaution centre' },
   { id: 'settings', label: 'Location & profile' },
+  { id: 'personal', label: 'Personal details' },
 ] as const;
 type View = (typeof views)[number]['id'];
 
@@ -82,7 +83,7 @@ function persist(key: string, value: unknown) {
   }
 }
 
-export const DashboardPage: React.FC<{ userId: string; initialView?: View; settingsRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ userId, initialView, settingsRequest, sidebarOpen, setSidebarOpen }) => {
+export const DashboardPage: React.FC<{ userId: string; initialView?: View; settingsRequest?: number; personalRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ userId, initialView, settingsRequest, personalRequest, sidebarOpen, setSidebarOpen }) => {
   const environmentService = useMemo(
     () => new EnvironmentService(
       new OpenMeteoAirQualityProvider(),
@@ -98,6 +99,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
   const [view, setView] = useState<View>(initialView ?? 'home');
   const [setupOpen, setSetupOpen] = useState(false);
   useEffect(() => { if (settingsRequest) setView('settings'); }, [settingsRequest]);
+  useEffect(() => { if (personalRequest) setView('personal'); }, [personalRequest]);
   const [approvedPlan, setApprovedPlan] = useState<DailyPlan | null>(null);
   const [forceFallback, setForceFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RecommendationCategory | 'all'>('all');
@@ -168,10 +170,10 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
     <main id="main-content" className={`main-content resident-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`} tabIndex={-1}>
       <nav id="daily-sidebar" className="daily-sidebar" aria-label="Main navigation" hidden={!sidebarOpen}>
         <p>YOUR AIR COMPANION</p>
-        {views.filter(({id}) => id !== 'settings').map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
+        {views.filter(({id}) => id !== 'settings' && id !== 'personal').map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
       </nav>
       <div className="daily-main-area">
-      <header className={`workspace-summary ${view === 'home' ? 'dashboard-home-hidden' : ''}`}>
+      <header className={`workspace-summary ${view === 'home' || view === 'settings' || view === 'personal' ? 'dashboard-home-hidden' : ''}`}>
         <div>
           <h1>Your air today</h1>
           <p>{selectedLocation.name}, {selectedLocation.country}</p>
@@ -200,16 +202,16 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
       <div className="workspace-layout">
 
         <div className="workspace-content">
-          {view !== 'settings' && loadError && (
+          {view !== 'settings' && view !== 'personal' && loadError && (
             <div className="error-banner" role="alert">
               <p>{loadError}</p>
               <button className="secondary-button" type="button" onClick={() => setRefreshNonce((value) => value + 1)}>Try again</button>
             </div>
           )}
-          {view !== 'settings' && !loadError && (isLoading || !currentPlan) && (
+          {view !== 'settings' && view !== 'personal' && !loadError && (isLoading || !currentPlan) && (
             <p className="workspace-loading" role="status">Updating conditions and your plan…</p>
           )}
-          {currentPlan?.fallbackActive && view !== 'insights' && view !== 'settings' && (
+          {currentPlan?.fallbackActive && view !== 'insights' && view !== 'settings' && view !== 'personal' && (
             <p className="workspace-loading" role="status">Some conditions use sample data. <button type="button" className="workspace-text-button" onClick={() => setView('insights')}>Check data sources</button></p>
           )}
 
@@ -286,9 +288,9 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
           {view === 'settings' && (
             <section className="workspace-settings" aria-label="Location and resident profile">
               <LocationSelector selectedLocation={selectedLocation} onSelectLocation={(location, permanent) => { setSelectedLocation(location); if (permanent) setSavedLocation(location); }} onRestoreLocation={() => setSelectedLocation(savedLocation)} />
-              <UserProfileEditor profile={userProfile} onChange={setUserProfile} />
             </section>
           )}
+          {view === 'personal' && <section className="workspace-settings" aria-label="Personal details"><UserProfileEditor profile={userProfile} onChange={setUserProfile} /></section>}
           {view === 'safety' && <section className="card safety-sources"><h2>Safety & trusted sources</h2><p>Use today’s air and weather information to choose suitable precautions. Conditions can change during the day.</p><ul><li>Reduce strenuous outdoor activity when air quality is poor, particularly if you are sensitive to pollution.</li><li>Keep indoor air cleaner by limiting smoke and using filtration when available.</li><li>Follow your clinician’s existing advice for health conditions.</li></ul><h3>Weather updates and guidance</h3><p>Open these sources for current local warnings and news:</p><ul><li><a href="https://mausam.imd.gov.in/" target="_blank" rel="noreferrer">India Meteorological Department</a></li><li><a href="https://airquality.cpcb.gov.in/" target="_blank" rel="noreferrer">Central Pollution Control Board — air quality</a></li><li><a href="https://www.who.int/health-topics/air-pollution" target="_blank" rel="noreferrer">WHO — air pollution and health</a></li></ul></section>}
           {view === 'precaution' && <PrecautionCenter />}
         </div>

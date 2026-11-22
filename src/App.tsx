@@ -20,6 +20,7 @@ function getInitialScreen(): AppScreen {
 export const App: React.FC = () => {
   const [screen, setScreen] = useState<AppScreen>(getInitialScreen);
   const [settingsRequest, setSettingsRequest] = useState(0);
+  const [personalRequest, setPersonalRequest] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showPreferences, setShowPreferences] = useState(false);
   const { isLoaded, isSignedIn, user } = useUser();
@@ -34,8 +35,8 @@ export const App: React.FC = () => {
     return (
       <div className="app-container" data-theme="light">
         <a href="#main-content" className="skip-link">Skip to main content</a>
-        <Header profile={profile} avatarUrl={user.hasImage ? user.imageUrl : undefined} onExit={leaveDashboard} onEditProfile={() => openUserProfile()} onAppSettings={() => setShowPreferences(true)} onSettings={() => setSettingsRequest(n => n + 1)} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(open => !open)} />
-        <DashboardPage key={user.id} userId={user.id} initialView={screen === 'agent' ? 'chat' : undefined} settingsRequest={settingsRequest} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <Header profile={profile} avatarUrl={user.hasImage ? user.imageUrl : undefined} onExit={leaveDashboard} onEditProfile={() => openUserProfile()} onAppSettings={() => setShowPreferences(true)} onPersonalDetails={() => setPersonalRequest(n => n + 1)} onSettings={() => setSettingsRequest(n => n + 1)} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(open => !open)} />
+        <DashboardPage key={user.id} userId={user.id} initialView={screen === 'agent' ? 'chat' : undefined} settingsRequest={settingsRequest} personalRequest={personalRequest} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         {showPreferences && <AppPreferences userId={user.id} close={() => setShowPreferences(false)} />}
       </div>
     );
