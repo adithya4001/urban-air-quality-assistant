@@ -7,6 +7,7 @@
   overflow: hidden;
   background: linear-gradient(#23425e, #b1d6e4 52%, #354337 52%);
   color: #fff;
+  font-family: var(--font-sans);
 }
 
 .city-intro-canvas, .city-intro-stage, .city-intro-exit {
@@ -73,9 +74,9 @@
 .city-intro-copy h1 {
   display: flex;
   justify-content: center;
-  gap: .11em;
-  font-size: clamp(1.85rem, 7.3vw, 5rem);
-  font-weight: 900;
+  gap: .015em;
+  font-size: clamp(1.85rem, 6.8vw, 4.7rem);
+  font-weight: 500;
   line-height: 1.1;
   text-shadow: 0 3px 14px #04152c;
 }
@@ -99,7 +100,7 @@
   padding: 6px 14px;
   background: rgb(15 23 42 / .78);
   font-size: clamp(.85rem, 2.1vw, 1.14rem);
-  font-weight: 650;
+  font-weight: 400;
   animation: city-title-in .55s var(--subtitle-reveal-at) ease both;
 }
 
