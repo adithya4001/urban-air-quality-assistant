@@ -1,0 +1,7 @@
+import type { AssistantReply } from './assistant';
+
+// Conservative offline guard. Follow-up questions can inherit recent subject context.
+const topic = /\b(air|aqi|pollut|smog|smoke|winter|weather|cold|heat|fog|haze|dust|pollen|allerg|asthma|copd|breath|lung|cough|chest|health|sick|symptom|mask|respirator|purifier|ventilat|indoor|outdoor|commut|travel|walk|cycl|run|exercis|workout|school|child|family|pregnan|elder|emission|traffic|vehicle|carpool|bus|metro|climat|environment|forecast|location|routine|daily plan|air plan|vaayudootha|gali|gaali|kalush|chali|arogyam|daggu|oopiri|swastha)\w*/i;
+const followUp = /^(and|what about|how about|why|how|when|where|can (i|we)|should (i|we)|is (it|that)|will (it|that)|tell me more|explain|also|mari|ante|inka|ela|enduku|avuna)\b/i;
+export function isInScope(question:string,history:Array<{question:string;answer:string}>=[]) { const q=question.trim(); return /^(what should i do today|help me plan (my )?day)[?.!\s]*$/i.test(q) || topic.test(q) || (followUp.test(q) && history.slice(-2).some(turn=>topic.test(turn.question))); }
+export function scopeReply():AssistantReply { return {intent:'today',answer:'I can help with air quality, winter weather, exposure, daily routines and related health precautions. Ask me something about your air or day.',keyActions:[],whyItMatters:'VaayuDootha focuses on practical air and weather decisions.',safetyNote:'This assistant does not provide medical diagnosis or treatment.',sourceGuidance:'VaayuDootha topic boundary',source:'rules'}; }

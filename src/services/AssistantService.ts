@@ -1,4 +1,5 @@
 import { AssistantContext, AssistantReply, buildAssistantReply } from '../domain/assistant';
+import { isInScope, scopeReply } from '../domain/scope';
 
 export interface IAssistantProvider {
   readonly providerName: string;
@@ -13,7 +14,8 @@ export interface IAssistantProvider {
 export class DemoAssistantProvider implements IAssistantProvider {
   public readonly providerName = 'VaayuDootha deterministic safety fallback';
 
-  public async ask(question: string, context: AssistantContext): Promise<AssistantReply> {
+  public async ask(question: string, context: AssistantContext, history: Array<{question:string;answer:string}> = []): Promise<AssistantReply> {
+    if (!isInScope(question, history)) return scopeReply();
     return { ...buildAssistantReply(question, context), source: 'rules' };
   }
 }
@@ -62,10 +64,11 @@ export class FallbackAssistantProvider implements IAssistantProvider {
   ) {}
 
   public async ask(question: string, context: AssistantContext, history: Array<{question:string;answer:string}> = []): Promise<AssistantReply> {
+    if (!isInScope(question, history)) return scopeReply();
     try {
       return await this.primary.ask(question, context, history);
     } catch {
-      return this.fallback.ask(question, context);
+      return this.fallback.ask(question, context, history);
     }
   }
 }
