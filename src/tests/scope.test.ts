@@ -11,4 +11,9 @@ describe('assistant topic boundary', () => {
     expect(isInScope('Write a birthday poem about a pirate')).toBe(false);
     expect(isInScope('Build a cryptocurrency trading bot')).toBe(false);
   });
+  it('recognizes air-quality questions in Hindi and Telugu scripts, including follow-ups', () => {
+    expect(isInScope('आज हवा की गुणवत्ता कैसी है?')).toBe(true);
+    expect(isInScope('ఈరోజు గాలి ఎలా ఉంది?')).toBe(true);
+    expect(isInScope('మరి రేపు?', [{ question: 'ఈరోజు బయటికి నడవడం సురక్షితమా?', answer: '...' }])).toBe(true);
+  });
 });

@@ -23,7 +23,7 @@ On the server, configure `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`) for di
 
 Air and weather are requested in parallel. Missing signals use clearly labelled sample fallback values; chart requests report missing data rather than inventing readings. The recommendation engine applies predefined rules, not a validated clinical risk model. AI-generated explanations are probabilistic and can be wrong. Client-provided context is not independently verified by the server.
 
-The app stores profile, selected locations, chat history and approved plans in the browser; these do not automatically sync across devices. Location coordinates are sent to Open-Meteo to fetch estimates. When AI is used, the question and relevant context are sent through the server to the configured AI provider. Do not include information you do not wish to share.
+The app stores profile, selected locations, chat history and approved plans in the browser; these do not automatically sync across devices. Location coordinates are sent to Open-Meteo to fetch estimates. When AI is used, the question, recent conversation and decision-relevant context (including selected city, air/weather values, and health/lifestyle preferences) are sent through the server to the configured AI provider. The AI request omits profile name, account email and exact coordinates. Do not include information you do not wish to share.
 
 ## Sources and limits
 

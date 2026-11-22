@@ -3,13 +3,54 @@ import type { HourlyPoint } from '../services/HourlyInsights';
 
 type Day = { date:string; min:number; max:number; avg:number };
 export function dailyAqi(points:HourlyPoint[]):Day[] {
-  const days=new Map<string,number[]>();
-  points.forEach(p=>{if(p.aqi!==null){const date=p.time.slice(0,10);days.set(date,[...(days.get(date)||[]),p.aqi]);}});
-  return [...days].map(([date,v])=>({date,min:Math.min(...v),max:Math.max(...v),avg:v.reduce((a,b)=>a+b,0)/v.length}));
+  const days = new Map<string, { min: number; max: number; total: number; count: number }>();
+  for (const point of points) {
+    if (point.aqi === null) continue;
+    const date = point.time.slice(0, 10);
+    const day = days.get(date);
+    if (day) {
+      day.min = Math.min(day.min, point.aqi);
+      day.max = Math.max(day.max, point.aqi);
+      day.total += point.aqi;
+      day.count += 1;
+    } else {
+      days.set(date, { min: point.aqi, max: point.aqi, total: point.aqi, count: 1 });
+    }
+  }
+  return [...days].map(([date, day]) => ({ date, min: day.min, max: day.max, avg: day.total / day.count }));
 }
 export function aggregateDaily(points:HourlyPoint[]):HourlyPoint[] {
-  const groups=new Map<string,HourlyPoint[]>();points.forEach(p=>{const d=p.time.slice(0,10);groups.set(d,[...(groups.get(d)||[]),p]);});
-  return [...groups].map(([d,rows])=>{const mean=(key:Exclude<keyof HourlyPoint,'time'>)=>{const a=rows.map(r=>r[key]).filter((v):v is number=>v!==null);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*10)/10:null};return {time:d+'T00:00',aqi:mean('aqi'),pm25:mean('pm25'),pm10:mean('pm10'),temperature:mean('temperature'),humidity:mean('humidity'),wind:mean('wind')}});
+  type Metric = Exclude<keyof HourlyPoint, 'time'>;
+  type Aggregate = { sums: Record<Metric, number>; counts: Record<Metric, number> };
+  const metrics: Metric[] = ['aqi', 'pm25', 'pm10', 'temperature', 'humidity', 'wind'];
+  const groups = new Map<string, Aggregate>();
+  for (const point of points) {
+    const date = point.time.slice(0, 10);
+    let group = groups.get(date);
+    if (!group) {
+      group = {
+        sums: { aqi: 0, pm25: 0, pm10: 0, temperature: 0, humidity: 0, wind: 0 },
+        counts: { aqi: 0, pm25: 0, pm10: 0, temperature: 0, humidity: 0, wind: 0 },
+      };
+      groups.set(date, group);
+    }
+    for (const metric of metrics) {
+      const value = point[metric];
+      if (value === null) continue;
+      group.sums[metric] += value;
+      group.counts[metric] += 1;
+    }
+  }
+  return [...groups].map(([date, group]) => {
+    const mean = (metric: Metric) => group.counts[metric]
+      ? Math.round(group.sums[metric] / group.counts[metric] * 10) / 10
+      : null;
+    return {
+      time: `${date}T00:00`,
+      aqi: mean('aqi'), pm25: mean('pm25'), pm10: mean('pm10'),
+      temperature: mean('temperature'), humidity: mean('humidity'), wind: mean('wind'),
+    };
+  });
 }
 
 const bands = [{name:'Good',max:50,color:'#58a980'},{name:'Moderate',max:100,color:'#e5bb4a'},{name:'Sensitive groups',max:150,color:'#e59855'},{name:'Unhealthy',max:200,color:'#d66c68'},{name:'Very unhealthy',max:300,color:'#9a79b1'},{name:'Hazardous',max:Infinity,color:'#824f61'}];

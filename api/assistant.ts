@@ -1,6 +1,7 @@
 import type { AssistantContext, AssistantReply, AssistantIntent } from '../src/domain/assistant';
 import { verifyToken } from '@clerk/backend';
 import { urgentSafetyReply } from '../src/domain/urgentSafety.js';
+import { isInScope, scopeReply } from '../src/domain/scope.js';
 
 const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
@@ -23,29 +24,90 @@ function json(data: unknown, status = 200, source = 'deterministic-safety-fallba
   });
 }
 
+const riskLevels = ['low', 'moderate', 'unhealthy_sensitive', 'unhealthy', 'very_unhealthy', 'hazardous'];
+const healthConditions = ['asthma', 'copd', 'cardiovascular', 'pregnancy', 'allergies', 'none'];
+const recommendationCategories = ['outdoor_activity', 'commute', 'indoor_air', 'emission_reduction', 'protective_equipment'];
+const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === 'object' && !Array.isArray(value));
+const isText = (value: unknown, maxLength: number) => typeof value === 'string' && value.trim().length > 0 && value.length <= maxLength;
+const isNumberBetween = (value: unknown, min: number, max: number) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+
 function isContext(value: unknown): value is AssistantContext {
-  if (!value || typeof value !== 'object') return false;
+  if (!isRecord(value)) return false;
   const candidate = value as Partial<AssistantContext>;
+  const profile = candidate.profile;
+  const air = candidate.airQuality;
+  const weather = candidate.weather;
   const plan = candidate.plan;
-  return Boolean(candidate.profile && Array.isArray(candidate.profile.healthConditions)
-    && candidate.airQuality && Number.isFinite(candidate.airQuality.aqi)
-    && candidate.weather && Number.isFinite(candidate.weather.temperatureC)
-    && plan && plan.location && typeof plan.location.city === 'string'
-    && typeof plan.overallRisk === 'string' && Array.isArray(plan.recommendations)
+  if (!profile || !air || !weather || !plan || !isRecord(plan.location) || !isRecord(plan.location.coordinates)) return false;
+  const location = plan.location;
+  const coords = location.coordinates;
+  const lifestyle = profile.lifestyle;
+  const validProfile = isText(profile.id, 128)
+    && isText(profile.name, 100)
+    && ['infant_child', 'teen_adult', 'older_adult'].includes(profile.ageGroup)
+    && Array.isArray(profile.healthConditions)
+    && profile.healthConditions.length <= healthConditions.length
+    && profile.healthConditions.every(condition => healthConditions.includes(condition))
+    && isRecord(lifestyle)
+    && ['walking', 'cycling', 'transit', 'car', 'wfh'].includes(lifestyle.commuteMode)
+    && isNumberBetween(lifestyle.commuteDurationMinutes, 0, 600)
+    && ['low', 'moderate', 'high'].includes(lifestyle.outdoorActivityLevel)
+    && ['electric_heatpump', 'natural_gas', 'wood_biomass', 'district_steam'].includes(lifestyle.homeHeatingType)
+    && typeof profile.hasAirPurifier === 'boolean'
+    && typeof profile.hasN95Masks === 'boolean';
+  const validAir = isNumberBetween(air.aqi, 0, 1000)
+    && isNumberBetween(air.pm25, 0, 10000)
+    && isNumberBetween(air.pm10, 0, 10000)
+    && riskLevels.includes(air.riskLevel)
+    && isText(air.timestamp, 64);
+  const validWeather = isNumberBetween(weather.temperatureC, -100, 70)
+    && isNumberBetween(weather.humidityPercent, 0, 100)
+    && isNumberBetween(weather.windSpeedKmh, 0, 500)
+    && isText(weather.windDirection, 12)
+    && ['none', 'moderate', 'severe'].includes(weather.inversionRisk)
+    && isText(weather.timestamp, 64)
+    && isText(weather.forecastSummary, 500);
+  const validRecommendations = Array.isArray(plan.recommendations)
     && plan.recommendations.length <= 25
-    && plan.recommendations.every(item => item && typeof item.category === 'string'
-      && Array.isArray(item.actionItems) && item.actionItems.length <= 20));
+    && plan.recommendations.every(item => isRecord(item)
+      && recommendationCategories.includes(item.category)
+      && isText(item.title, 160)
+      && isText(item.summary, 500)
+      && Array.isArray(item.actionItems)
+      && item.actionItems.length <= 20
+      && item.actionItems.every(action => isText(action, 400))
+      && ['critical', 'high', 'medium', 'low'].includes(item.priority)
+      && isText(item.sourceGuidance, 240));
+  return validProfile
+    && validAir
+    && validWeather
+    && isText(location.id, 128)
+    && isText(location.name, 160)
+    && isText(location.city, 120)
+    && isText(location.country, 120)
+    && isNumberBetween(coords.latitude, -90, 90)
+    && isNumberBetween(coords.longitude, -180, 180)
+    && riskLevels.includes(plan.overallRisk)
+    && isText(plan.generatedAt, 64)
+    && validRecommendations;
 }
 
 function isExplanation(value: unknown): value is Pick<AssistantReply, 'answer' | 'whyItMatters'> {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<AssistantReply>;
-  return typeof candidate.answer === 'string'
-    && candidate.answer.length > 0
-    && candidate.answer.length <= 700
-    && typeof candidate.whyItMatters === 'string'
-    && candidate.whyItMatters.length > 0
-    && candidate.whyItMatters.length <= 900;
+  const answer = candidate.answer;
+  const explanation = candidate.whyItMatters;
+  if (typeof answer !== 'string' || typeof explanation !== 'string') return false;
+  const unsafeClinicalAdvice = [
+    /\b(?:you have|you likely have|you are suffering from|diagnosed with)\s+(?:asthma|copd|pneumonia|bronchitis|heart disease|infection)\b/i,
+    /\b(?:take|start|stop|increase|decrease|double|skip)\s+(?:taking\s+)?(?:your\s+)?(?:[a-z-]+\s+){0,2}(?:medication|medicine|inhaler|antibiotic|steroid|dose|tablet|pill)\b/i,
+    /\b\d+(?:\.\d+)?\s*(?:mg|mcg|µg|ml|puffs?)\b/i,
+  ];
+  if (unsafeClinicalAdvice.some(pattern => pattern.test(`${answer} ${explanation}`))) return false;
+  return answer.trim().length > 0
+    && answer.length <= 700
+    && explanation.trim().length > 0
+    && explanation.length <= 900;
 }
 
 function classifyIntent(question: string): AssistantIntent {
@@ -104,7 +166,23 @@ function deterministicReply(question: string, context: AssistantContext): Assist
 
 function safeContext(context: AssistantContext) {
   return {
-    location: context.plan.location,
+    // Send only locality and decision-relevant profile context; omit identity and exact coordinates.
+    location: {
+      city: context.plan.location.city,
+      country: context.plan.location.country,
+    },
+    residentContext: {
+      ageGroup: context.profile.ageGroup,
+      healthConditions: context.profile.healthConditions,
+      lifestyle: {
+        commuteMode: context.profile.lifestyle.commuteMode,
+        commuteDurationMinutes: context.profile.lifestyle.commuteDurationMinutes,
+        outdoorActivityLevel: context.profile.lifestyle.outdoorActivityLevel,
+        homeHeatingType: context.profile.lifestyle.homeHeatingType,
+      },
+      hasAirPurifier: context.profile.hasAirPurifier,
+      hasN95Masks: context.profile.hasN95Masks,
+    },
     airQuality: context.airQuality,
     weather: context.weather,
     overallRisk: context.plan.overallRisk,
@@ -225,8 +303,9 @@ export default {
     }
     const urgent = urgentSafetyReply(candidate.question);
     if (urgent) return json(urgent, 200, 'urgent-safety');
-    if (!isContext(candidate.context)) return json({ error: 'A valid assistant context is required' }, 400);
     const history = Array.isArray(candidate.history) ? candidate.history.slice(-6).filter((item): item is {question:string;answer:string} => Boolean(item && typeof item.question === 'string' && item.question.length <= 500 && typeof item.answer === 'string' && item.answer.length <= 700)) : [];
+    if (!isInScope(candidate.question, history)) return json(scopeReply(), 200, 'scope');
+    if (!isContext(candidate.context)) return json({ error: 'A valid assistant context is required' }, 400);
     const baseline = deterministicReply(candidate.question, candidate.context);
     const directGemini = Boolean(env.GEMINI_API_KEY);
     const token = env.GEMINI_API_KEY || env.AI_GATEWAY_API_KEY || env.VERCEL_OIDC_TOKEN;
@@ -242,7 +321,7 @@ export default {
         directGemini ? GEMINI_URL : GATEWAY_URL,
       );
       return json(
-        { ...baseline, answer: explanation.answer, whyItMatters: explanation.whyItMatters, keyActions: [], sourceGuidance: 'AI explanation using the supplied air and weather context.' },
+        { ...baseline, answer: explanation.answer, whyItMatters: explanation.whyItMatters, sourceGuidance: 'AI explanation using the supplied air and weather context.' },
         200,
         'ai-gateway-with-deterministic-guardrails',
       );

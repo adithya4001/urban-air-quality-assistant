@@ -51,7 +51,12 @@ export class RemoteAssistantProvider implements IAssistantProvider {
     return {
       ...payload,
       source: response.headers.get('X-BreatheSafe-Source') === 'ai-gateway-with-deterministic-guardrails'
-        ? 'genai' : response.headers.get('X-BreatheSafe-Source') === 'urgent-safety' ? 'safety' : 'rules',
+        ? 'genai'
+        : response.headers.get('X-BreatheSafe-Source') === 'urgent-safety'
+          ? 'safety'
+          : response.headers.get('X-BreatheSafe-Source') === 'scope'
+            ? 'scope'
+            : 'rules',
     };
   }
 }
