@@ -1,0 +1,20 @@
+import React from 'react';
+import type { HourlyPoint } from '../services/HourlyInsights';
+
+type Day = { date:string; min:number; max:number; avg:number };
+export function dailyAqi(points:HourlyPoint[]):Day[] {
+  const days=new Map<string,number[]>();
+  points.forEach(p=>{if(p.aqi!==null){const date=p.time.slice(0,10);days.set(date,[...(days.get(date)||[]),p.aqi]);}});
+  return [...days].map(([date,v])=>({date,min:Math.min(...v),max:Math.max(...v),avg:v.reduce((a,b)=>a+b,0)/v.length}));
+}
+export function aggregateDaily(points:HourlyPoint[]):HourlyPoint[] {
+  const groups=new Map<string,HourlyPoint[]>();points.forEach(p=>{const d=p.time.slice(0,10);groups.set(d,[...(groups.get(d)||[]),p]);});
+  return [...groups].map(([d,rows])=>{const mean=(key:Exclude<keyof HourlyPoint,'time'>)=>{const a=rows.map(r=>r[key]).filter((v):v is number=>v!==null);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*10)/10:null};return {time:d+'T00:00',aqi:mean('aqi'),pm25:mean('pm25'),pm10:mean('pm10'),temperature:mean('temperature'),humidity:mean('humidity'),wind:mean('wind')}});
+}
+export function AdditionalInsights({points,topN}:{points:HourlyPoint[];topN:number}){
+ const days=dailyAqi(points);const selected=days.slice(-14);const max=Math.max(1,...selected.map(d=>d.max));const x=(i:number)=>12+i*270/Math.max(1,selected.length-1);const y=(v:number)=>105-v/max*90;
+ const high=[...days].sort((a,b)=>b.avg-a.avg).slice(0,topN);
+ return <><article className="insight-chart"><div className="insight-chart-heading"><div><span className="insight-metric-unit">US AQI · daily range</span><h3>Air quality range ribbon</h3></div></div><p>Daily minimum to maximum hourly estimates; the line shows each day's average. Partial days may appear.</p>{selected.length?<svg viewBox="0 0 300 130" role="img" aria-label="Daily minimum, maximum and average AQI. See top periods and data table for details."><polygon points={[...selected.map((d,i)=>`${x(i)},${y(d.max)}`),...selected.map((d,i)=>`${x(i)},${y(d.min)}`).reverse()].join(' ')} fill="#70c3af" opacity=".35"/><polyline points={selected.map((d,i)=>`${x(i)},${y(d.avg)}`).join(' ')} fill="none" stroke="#228672" strokeWidth="2"/>{selected.map((d,i)=><circle key={d.date} cx={x(i)} cy={y(d.avg)} r="3" fill="#228672"><title>{`${d.date}: average ${d.avg.toFixed(1)}, range ${d.min}–${d.max}`}</title></circle>)}<text x="12" y="125" fontSize="9">{selected[0].date}</text><text x="282" y="125" textAnchor="end" fontSize="9">{selected[selected.length-1].date}</text></svg>:<p>Daily AQI data unavailable.</p>}</article>
+ <article className="insight-chart"><span className="insight-metric-unit">US AQI · daily averages</span><h3>Day-to-day change waterfall</h3><p>First bar is the daily average; following bars show increases or decreases from the previous day. Based on available hours.</p>{selected.length>1?<svg viewBox="0 0 300 130" role="img" aria-label="Daily AQI changes. Select the data table for hourly values.">{selected.map((d,i)=>{const prev=i?selected[i-1].avg:0;const top=Math.max(d.avg,prev),bottom=Math.min(d.avg,prev);return <rect key={d.date} x={x(i)-5} y={y(top)} width="10" height={Math.max(2,y(bottom)-y(top))} fill={i===0?'#6ba9a0':d.avg>=prev?'#d4886d':'#68aa87'}><title>{`${d.date}: ${i?'change '+(d.avg-prev).toFixed(1):'average '+d.avg.toFixed(1)} US AQI`}</title></rect>})}<line x1="8" x2="292" y1="105" y2="105" stroke="#cfdfda"/><text x="12" y="125" fontSize="9">{selected[0].date}</text><text x="282" y="125" textAnchor="end" fontSize="9">{selected[selected.length-1].date}</text></svg>:<p>Choose weekly or monthly to compare days.</p>}</article>
+ <article className="insight-chart"><span className="insight-metric-unit">Ranked daily averages</span><h3>Top {topN} highest AQI days</h3><p>Ranked by average of available hourly US AQI model estimates, including partial days.</p><ol className="insights-ranked">{high.map(d=><li key={d.date}><span>{d.date}</span><strong>{d.avg.toFixed(1)}</strong></li>)}</ol>{!high.length&&<p>No AQI data available.</p>}</article></>;
+}
