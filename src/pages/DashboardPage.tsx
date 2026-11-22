@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AssistantPanel } from '../components/AssistantPanel';
 import { EnvironmentalCard } from '../components/EnvironmentalCard';
 import { FallbackBanner } from '../components/FallbackBanner';
-import { LocationSelector } from '../components/LocationSelector';
+import { LocationPlanner } from '../components/LocationPlanner';
 import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
 import { RecommendationCard } from '../components/RecommendationCard';
 import { UserProfileEditor } from '../components/UserProfileEditor';
@@ -287,7 +287,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
 
           {view === 'settings' && (
             <section className="workspace-settings" aria-label="Location and resident profile">
-              <LocationSelector selectedLocation={selectedLocation} onSelectLocation={(location, permanent) => { setSelectedLocation(location); if (permanent) setSavedLocation(location); }} onRestoreLocation={() => setSelectedLocation(savedLocation)} />
+              <LocationPlanner userId={userId} selectedLocation={selectedLocation} onSelectLocation={(location, permanent) => { setSelectedLocation(location); if (permanent) setSavedLocation(location); }} />
             </section>
           )}
           {view === 'personal' && <section className="workspace-settings" aria-label="Personal details"><UserProfileEditor profile={userProfile} onChange={setUserProfile} /></section>}
