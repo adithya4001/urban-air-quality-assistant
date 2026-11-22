@@ -47,14 +47,14 @@ const DEFAULT_PROFILE: UserProfile = {
   hasN95Masks: true,
 };
 
-function getStoredLocation(): Location {
+function getStoredLocation(key: string): Location {
   if (typeof window === 'undefined') return MOCK_LOCATIONS[0];
   try {
-    const locationId = window.localStorage.getItem(LOCATION_STORAGE_KEY);
+    const locationId = window.localStorage.getItem(key);
     const preset = MOCK_LOCATIONS.find((location) => location.id === locationId);
     if (preset) return preset;
     const saved = JSON.parse(locationId ?? 'null') as Location | null;
-    if (saved?.country === 'India' && typeof saved.name === 'string' && typeof saved.city === 'string'
+    if (typeof saved?.country === 'string' && typeof saved.name === 'string' && typeof saved.city === 'string'
         && typeof saved.id === 'string' && Number.isFinite(saved.coordinates?.latitude)
         && Number.isFinite(saved.coordinates?.longitude)) return saved;
     return MOCK_LOCATIONS[0];
@@ -63,10 +63,10 @@ function getStoredLocation(): Location {
   }
 }
 
-function getStoredProfile(): UserProfile {
+function getStoredProfile(key: string): UserProfile {
   if (typeof window === 'undefined') return DEFAULT_PROFILE;
   try {
-    const saved = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+    const saved = window.localStorage.getItem(key);
     if (!saved) return DEFAULT_PROFILE;
     return { ...DEFAULT_PROFILE, ...JSON.parse(saved) } as UserProfile;
   } catch {
@@ -82,7 +82,7 @@ function persist(key: string, value: unknown) {
   }
 }
 
-export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ initialView, settingsRequest, sidebarOpen, setSidebarOpen }) => {
+export const DashboardPage: React.FC<{ userId: string; initialView?: View; settingsRequest?: number; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ userId, initialView, settingsRequest, sidebarOpen, setSidebarOpen }) => {
   const environmentService = useMemo(
     () => new EnvironmentService(
       new OpenMeteoAirQualityProvider(),
@@ -90,8 +90,11 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
     ),
     [],
   );
-  const [selectedLocation, setSelectedLocation] = useState<Location>(getStoredLocation);
-  const [userProfile, setUserProfile] = useState<UserProfile>(getStoredProfile);
+  const locationKey = `${LOCATION_STORAGE_KEY}.${userId}`;
+  const profileKey = `${PROFILE_STORAGE_KEY}.${userId}`;
+  const [selectedLocation, setSelectedLocation] = useState<Location>(() => getStoredLocation(locationKey));
+  const [savedLocation, setSavedLocation] = useState<Location>(() => getStoredLocation(locationKey));
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => getStoredProfile(profileKey));
   const [view, setView] = useState<View>(initialView ?? 'home');
   const [setupOpen, setSetupOpen] = useState(false);
   useEffect(() => { if (settingsRequest) setView('settings'); }, [settingsRequest]);
@@ -105,10 +108,10 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    const value = MOCK_LOCATIONS.includes(selectedLocation) ? selectedLocation.id : JSON.stringify(selectedLocation);
-    try { window.localStorage.setItem(LOCATION_STORAGE_KEY, value); } catch { /* Optional storage. */ }
-  }, [selectedLocation]);
-  useEffect(() => persist(PROFILE_STORAGE_KEY, userProfile), [userProfile]);
+    const value = MOCK_LOCATIONS.includes(savedLocation) ? savedLocation.id : JSON.stringify(savedLocation);
+    try { window.localStorage.setItem(locationKey, value); } catch { /* Optional storage. */ }
+  }, [savedLocation, locationKey]);
+  useEffect(() => persist(profileKey, userProfile), [userProfile, profileKey]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setRefreshNonce((value) => value + 1), 30 * 60 * 1000);
@@ -282,7 +285,7 @@ export const DashboardPage: React.FC<{ initialView?: View; settingsRequest?: num
 
           {view === 'settings' && (
             <section className="workspace-settings" aria-label="Location and resident profile">
-              <LocationSelector selectedLocation={selectedLocation} onSelectLocation={setSelectedLocation} />
+              <LocationSelector selectedLocation={selectedLocation} onSelectLocation={(location, permanent) => { setSelectedLocation(location); if (permanent) setSavedLocation(location); }} onRestoreLocation={() => setSelectedLocation(savedLocation)} />
               <UserProfileEditor profile={userProfile} onChange={setUserProfile} />
             </section>
           )}

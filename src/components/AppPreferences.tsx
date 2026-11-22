@@ -1,0 +1,9 @@
+import { useEffect, useState } from 'react';
+
+export function AppPreferences({ userId, close }: { userId: string; close: () => void }) {
+  const key = `vaayudootha.preferences.${userId}`;
+  const [textSize, setTextSize] = useState(() => { try { return JSON.parse(localStorage.getItem(key) || '{}').textSize || 'normal'; } catch { return 'normal'; } });
+  const [motion, setMotion] = useState(() => { try { return Boolean(JSON.parse(localStorage.getItem(key) || '{}').reduceMotion); } catch { return false; } });
+  useEffect(() => { document.documentElement.dataset.textSize = textSize; document.documentElement.dataset.appReduceMotion = String(motion); localStorage.setItem(key, JSON.stringify({ textSize, reduceMotion: motion })); }, [key, textSize, motion]);
+  return <div className="profile-modal-backdrop" onMouseDown={e => { if(e.target === e.currentTarget) close(); }}><section className="profile-modal" role="dialog" aria-modal="true" aria-labelledby="preferences-title"><button className="profile-modal-close" onClick={close} aria-label="Close settings">×</button><p className="daily-eyebrow">MAKE IT YOURS</p><h2 id="preferences-title">App settings</h2><p>Adjust how VaayuDootha appears in this browser.</p><label className="profile-setting">Text size <select value={textSize} onChange={e=>setTextSize(e.target.value)}><option value="normal">Normal</option><option value="large">Large</option></select></label><label className="profile-setting profile-check"><input type="checkbox" checked={motion} onChange={e=>setMotion(e.target.checked)} /> Reduce motion and animation</label><p className="profile-setting-note">These settings are saved in this browser. Assistant model availability depends on the service configuration.</p><button className="primary-button" onClick={close}>Done</button></section></div>;
+}
