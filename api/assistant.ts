@@ -109,7 +109,7 @@ function safeContext(context: AssistantContext) {
   };
 }
 
-async function explainWithGateway(question: string, context: AssistantContext, token: string, model: string) {
+async function explainWithGateway(question: string, context: AssistantContext, token: string, model: string, history: Array<{question:string;answer:string}>) {
   const response = await fetch(GATEWAY_URL, {
     method: 'POST',
     signal: AbortSignal.timeout(18000),
@@ -151,7 +151,7 @@ async function explainWithGateway(question: string, context: AssistantContext, t
         },
         {
           role: 'user',
-          content: JSON.stringify({ question, verifiedPlan: safeContext(context) }),
+          content: JSON.stringify({ question, recentConversation: history, verifiedPlan: safeContext(context) }),
         },
       ],
     }),
@@ -187,11 +187,12 @@ export default {
     }
 
     if (!body || typeof body !== 'object') return json({ error: 'Request body must be an object' }, 400);
-    const candidate = body as { question?: unknown; context?: unknown };
+    const candidate = body as { question?: unknown; context?: unknown; history?: unknown };
     if (typeof candidate.question !== 'string' || candidate.question.trim().length === 0 || candidate.question.length > 500) {
       return json({ error: 'Question must be a non-empty string of at most 500 characters' }, 400);
     }
     if (!isContext(candidate.context)) return json({ error: 'A valid assistant context is required' }, 400);
+    const history = Array.isArray(candidate.history) ? candidate.history.slice(-6).filter((item): item is {question:string;answer:string} => Boolean(item && typeof item.question === 'string' && item.question.length <= 500 && typeof item.answer === 'string' && item.answer.length <= 700)) : [];
 
     const baseline = deterministicReply(candidate.question, candidate.context);
     const env = getRuntimeEnv();
@@ -205,6 +206,7 @@ export default {
         candidate.context,
         token,
         env.AI_GATEWAY_MODEL || 'google/gemini-3.8-flash',
+        history,
       );
       return json(
         { ...baseline, answer: explanation.answer, whyItMatters: explanation.whyItMatters },

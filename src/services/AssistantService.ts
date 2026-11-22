@@ -2,7 +2,7 @@ import { AssistantContext, AssistantReply, buildAssistantReply } from '../domain
 
 export interface IAssistantProvider {
   readonly providerName: string;
-  ask(question: string, context: AssistantContext): Promise<AssistantReply>;
+  ask(question: string, context: AssistantContext, history?: Array<{question:string;answer:string}>): Promise<AssistantReply>;
 }
 
 /**
@@ -35,11 +35,11 @@ export class RemoteAssistantProvider implements IAssistantProvider {
 
   constructor(private readonly endpoint: string) {}
 
-  public async ask(question: string, context: AssistantContext): Promise<AssistantReply> {
+  public async ask(question: string, context: AssistantContext, history: Array<{question:string;answer:string}> = []): Promise<AssistantReply> {
     const response = await fetch(this.endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, context }),
+      body: JSON.stringify({ question, context, history: history.slice(-6) }),
     });
     if (!response.ok) throw new Error(`Assistant endpoint returned ${response.status}`);
     const payload: unknown = await response.json();
@@ -61,9 +61,9 @@ export class FallbackAssistantProvider implements IAssistantProvider {
     private readonly fallback: IAssistantProvider,
   ) {}
 
-  public async ask(question: string, context: AssistantContext): Promise<AssistantReply> {
+  public async ask(question: string, context: AssistantContext, history: Array<{question:string;answer:string}> = []): Promise<AssistantReply> {
     try {
-      return await this.primary.ask(question, context);
+      return await this.primary.ask(question, context, history);
     } catch {
       return this.fallback.ask(question, context);
     }

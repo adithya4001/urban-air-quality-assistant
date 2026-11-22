@@ -1,132 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AssistantContext, AssistantReply } from '../domain/assistant';
 import { createAssistantProvider } from '../services/AssistantService';
 import { usePreferences } from '../domain/preferences';
 
-interface AssistantPanelProps {
-  context: AssistantContext;
-  onApprove: () => void;
+type Turn = { question:string; reply:AssistantReply };
+type Chat = { id:string; title:string; turns:Turn[] };
+const newChat = ():Chat => ({id:globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,title:'New conversation',turns:[]});
+const prompts=['What should I do today?','Is it safe to exercise outside?','How can I improve indoor air?'];
+
+export function AssistantPanel({context,onApprove,userId}:{context:AssistantContext;onApprove:()=>void;userId:string}) {
+  const {prefs}=usePreferences(); const key=`vaayudootha.chats.${userId}`;
+  const [chats,setChats]=useState<Chat[]>(()=>{try{const saved=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(saved)&&saved.length?saved:[newChat()]}catch{return [newChat()]}});
+  const [active,setActive]=useState(()=>chats[0].id); const [question,setQuestion]=useState(''); const [busy,setBusy]=useState(false); const [error,setError]=useState(''); const [listening,setListening]=useState(false); const [attachment,setAttachment]=useState('');
+  const fileRef=useRef<HTMLInputElement>(null); const provider=useMemo(()=>createAssistantProvider(),[]); const chat=chats.find(c=>c.id===active)||chats[0];
+  useEffect(()=>{try{localStorage.setItem(key,JSON.stringify(chats.slice(0,30)))}catch{/* Chat remains available during this session. */}},[key,chats]);
+  const ask=async(value=question)=>{const text=value.trim();if(!text||busy)return;const combined=attachment?`${text}\n\nAttached notes: ${attachment}`:text;if(combined.length>500){setError('Question and attached notes must total 500 characters or less.');return}const chatId=chat.id;const history=chat.turns.slice(-6).map(t=>({question:t.question,answer:t.reply.answer}));setQuestion('');setAttachment('');setError('');setBusy(true);try{const reply=await provider.ask(combined,context,history);setChats(prev=>prev.map(c=>c.id===chatId?{...c,title:c.turns.length?c.title:text.slice(0,42),turns:[...c.turns,{question:combined,reply}]}:c));if(prefs.autoRead&&'speechSynthesis'in window){window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply.answer))}}catch{setError('Unable to answer right now. Please try again.')}finally{setBusy(false)}};
+  const listen=()=>{type R={lang:string;start:()=>void;onresult:((e:{results:ArrayLike<ArrayLike<{transcript:string}>>})=>void)|null;onend:(()=>void)|null;onerror:(()=>void)|null};const w=window as unknown as {SpeechRecognition?:new()=>R;webkitSpeechRecognition?:new()=>R};const C=w.SpeechRecognition||w.webkitSpeechRecognition;if(!C){setError('Voice input is not supported in this browser. Please type your question.');return}const r=new C();r.lang='en-IN';r.onresult=e=>setQuestion(e.results[0][0].transcript);r.onerror=()=>setError('Microphone permission was denied or speech could not be recognised.');r.onend=()=>setListening(false);try{r.start();setListening(true)}catch{setError('Could not start microphone.')}};
+  const create=()=>{const next=newChat();setChats(prev=>[next,...prev].slice(0,30));setActive(next.id);setQuestion('');setError('')};
+  return <section className="chat-workspace" aria-label="VaayuDootha assistant"><aside className="chat-history"><button type="button" className="chat-new" onClick={create} disabled={busy}>＋ New chat</button><p>YOUR CONVERSATIONS</p><div>{chats.map(c=><button type="button" key={c.id} className={chat.id===c.id?'active':''} onClick={()=>{setActive(c.id);setError('')}}>{c.title}</button>)}</div><small>History stays in this browser.</small></aside><div className="chat-main"><div className="chat-topline"><span>✦ VaayuDootha assistant</span><span>{context.plan.fallbackActive?'Sample air data':'Air & weather context'}</span></div><div className={chat.turns.length?'chat-body has-messages':'chat-body'}><div className="chat-messages" role="log" aria-live="polite">{chat.turns.map((turn,index)=><div className="chat-turn" key={index}><p className="chat-user-message">{turn.question}</p><div className="chat-response"><span className="chat-response-mark">✦</span><div><small>{turn.reply.source==='genai'?'AI explanation':'Rule-based guidance · AI unavailable'}</small><p>{turn.reply.answer}</p>{prefs.replyDetails&&<><ul>{turn.reply.keyActions.map(a=><li key={a}>{a}</li>)}</ul><p>{turn.reply.whyItMatters}</p><small>{turn.reply.sourceGuidance}</small></>}<p className="chat-safety">{turn.reply.safetyNote}</p></div></div></div>)}{busy&&<p className="chat-thinking" role="status">Thinking about your question…</p>}</div>{!chat.turns.length&&!busy&&<div className="chat-greeting"><span>✦</span><h1>What’s on your mind today?</h1><p>Ask about the air, your routine, or a safer next step.</p></div>}<div className="chat-composer-area"><form className="chat-composer" onSubmit={e=>{e.preventDefault();void ask()}}><input ref={fileRef} type="file" accept=".txt,text/plain" hidden onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(file.size>2048){setError('Choose a text file smaller than 2 KB.');return}void file.text().then(text=>{setAttachment(text.trim());setError('')}).catch(()=>setError('Could not read the text file.'))}}/><button type="button" className="chat-icon-button" aria-label="Attach a text file" title="Attach a text file" onClick={()=>fileRef.current?.click()}>＋</button><label className="sr-only" htmlFor="assistant-question">Ask VaayuDootha</label><textarea id="assistant-question" value={question} maxLength={500} rows={1} placeholder="Ask VaayuDootha anything about your day…" onChange={e=>setQuestion(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void ask()}}}/><button type="button" className="chat-icon-button" aria-label="Use voice input" onClick={listen} disabled={listening}>{listening?'◉':'🎙'}</button><button type="submit" className="chat-send" aria-label="Send message" disabled={busy||!question.trim()}>↑</button></form>{attachment&&<p className="chat-attachment">Text notes attached · {attachment.length} characters <button onClick={()=>setAttachment('')}>Remove</button></p>}{error&&<p className="assistant-error" role="alert">{error}</p>}{prefs.quickQuestions&&!chat.turns.length&&<div className="chat-suggestions">{prompts.map(p=><button key={p} type="button" disabled={busy} onClick={()=>void ask(p)}>{p} ↗</button>)}</div>}<p className="chat-caption">General air-quality guidance, not a medical diagnosis. Responses may use a rule-based fallback.</p>{chat.turns.length>0&&<button className="chat-approve" onClick={onApprove}>Review & approve current recommendations ↗</button>}</div></div></div></section>;
 }
-
-const quickQuestions = [
-  'What should I do today?',
-  'How can I protect indoor air?',
-  'Is it safe to exercise outside?',
-  'What is the lowest-emission commute?',
-];
-
-export const AssistantPanel: React.FC<AssistantPanelProps> = ({ context, onApprove }) => {
-  const {prefs} = usePreferences();
-  const [question, setQuestion] = useState('');
-  const [turns, setTurns] = useState<Array<{ question: string; reply: AssistantReply }>>([]);
-  const [isAsking, setIsAsking] = useState(false);
-  const [providerError, setProviderError] = useState<string | null>(null);
-  const [remindersOn, setRemindersOn] = useState(false);
-  const [reminderTime, setReminderTime] = useState('07:00');
-  const provider = useMemo(() => createAssistantProvider(), []);
-
-  useEffect(() => {
-    if (!remindersOn) return;
-    let timeout: number;
-    const schedule = () => {
-      const [hours, minutes] = reminderTime.split(':').map(Number);
-      const now = new Date(); const next = new Date(); next.setHours(hours, minutes, 0, 0);
-      if (next <= now) next.setDate(next.getDate() + 1);
-      timeout = window.setTimeout(() => { new Notification('VaayuDootha air check-in', { body: 'Check today’s air and review your plan.' }); schedule(); }, next.getTime() - now.getTime());
-    };
-    schedule(); return () => window.clearTimeout(timeout);
-  }, [remindersOn, reminderTime]);
-
-  const ask = async (value = question) => {
-    const trimmed = value.trim();
-    if (!trimmed || isAsking) return;
-    setQuestion('');
-    setIsAsking(true);
-    setProviderError(null);
-    try {
-      const reply = await provider.ask(trimmed, context);
-      setTurns((previous) => [...previous, { question: trimmed, reply }]);
-      if (prefs.autoRead && 'speechSynthesis' in window) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply.answer)); }
-    } catch {
-      setProviderError('The assistant could not answer right now. Open Action plan for your recommendations.');
-    } finally {
-      setIsAsking(false);
-    }
-  };
-
-  return (
-    <section className="assistant-panel card" aria-labelledby="assistant-title">
-      <div className="assistant-heading">
-        <div>
-          <h2 id="assistant-title" className="card-title">Ask VaayuDootha</h2>
-          <p className="section-copy">Ask about exercise, commuting, or the air inside your home.</p>
-        </div>
-      </div>
-
-      <button className="secondary-button" type="button" onClick={onApprove}>Approve current recommendations</button>
-
-      <div className="assistant-reminders">
-        <div><strong>Daily air check-in</strong><small>Reminder works while this page stays open</small></div>
-        <input aria-label="Reminder time" type="time" value={reminderTime} onChange={event => setReminderTime(event.target.value)} disabled={!remindersOn} />
-        <button type="button" className={remindersOn ? 'reminder-toggle active' : 'reminder-toggle'} onClick={async () => {
-          if (remindersOn) { setRemindersOn(false); return; }
-          if (!('Notification' in window)) return;
-          const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
-          if (permission !== 'granted') return;
-          setRemindersOn(true);
-        }}>{remindersOn ? 'On' : 'Enable reminder'}</button>
-      </div>
-
-      {prefs.quickQuestions && <div className="quick-question-list" aria-label="Suggested questions">
-        {quickQuestions.map((item) => (
-          <button key={item} type="button" className="chip-button" disabled={isAsking} onClick={() => ask(item)}>
-            {item}
-          </button>
-        ))}
-      </div>}
-
-      <div className="conversation" role="log" aria-label="Conversation">
-      {turns.map(({ question: asked, reply }, index) => (
-        <div className="conversation-turn" key={index}>
-          <p className="question-bubble">{asked}</p>
-          <div className="assistant-answer">
-            <span className="reply-source">{reply.source === 'genai' ? 'GenAI explanation' : 'Rule-based guidance'}</span>
-            <p className="answer-lead">{reply.answer}</p>
-            {prefs.replyDetails && <><div className="answer-grid">
-              <div><h3>Do this next</h3><ul>{reply.keyActions.map((action) => <li key={action}>{action}</li>)}</ul></div>
-              <div><h3>Why it matters</h3><p>{reply.whyItMatters}</p></div>
-            </div>
-            <p className="safety-note">{reply.safetyNote}</p>
-            <p className="source-note">{reply.sourceGuidance}</p></>}
-            {!prefs.replyDetails && <p className="safety-note">{reply.safetyNote}</p>}
-          </div>
-        </div>
-      ))}
-      </div>
-      <form
-        className="assistant-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void ask();
-        }}
-      >
-        <label className="sr-only" htmlFor="assistant-question">Ask a question about today’s air</label>
-        <input
-          id="assistant-question"
-          className="form-input assistant-input"
-          value={question}
-          maxLength={500}
-          onChange={(event) => setQuestion(event.target.value)}
-          placeholder="e.g. Can my child play outside after school?"
-        />
-        <button className="primary-button" type="submit" disabled={isAsking || !question.trim()}>
-          {isAsking ? 'Thinking…' : 'Guide me'}
-        </button>
-      </form>
-
-      {providerError && <p className="assistant-error" role="alert">{providerError}</p>}
-
-    </section>
-  );
-};
-

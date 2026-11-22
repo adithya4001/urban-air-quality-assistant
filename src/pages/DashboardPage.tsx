@@ -176,7 +176,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
         {views.filter(({id}) => id !== 'settings' && id !== 'personal').map(({id,label}) => <button key={id} className={view===id?'selected':''} onClick={() => {setView(id); if(window.innerWidth<800)setSidebarOpen(false)}}>{label}</button>)}
       </nav>
       <div className="daily-main-area">
-      <header className={`workspace-summary ${view === 'home' || view === 'settings' || view === 'personal' ? 'dashboard-home-hidden' : ''}`}>
+      <header className={`workspace-summary ${view === 'home' || view === 'chat' || view === 'settings' || view === 'personal' ? 'dashboard-home-hidden' : ''}`}>
         <div>
           <h1>Your air today</h1>
           <p>{selectedLocation.name}, {selectedLocation.country}</p>
@@ -219,15 +219,7 @@ export const DashboardPage: React.FC<{ userId: string; initialView?: View; setti
           )}
 
           <div className="workspace-chat" hidden={view !== 'chat'}>
-            {assistantContext && <AssistantPanel context={assistantContext} onApprove={() => {if(currentPlan){setApprovedPlan(currentPlan);setView('plan')}}} />}
-            {currentPlan?.recommendations[0] && (
-              <aside className="next-action" aria-labelledby="next-action-title">
-                <h2 id="next-action-title">Start here</h2>
-                <strong>{currentPlan.recommendations[0].title}</strong>
-                <p>{currentPlan.recommendations[0].summary}</p>
-                <button type="button" onClick={() => setView('plan')}>See your full plan <span aria-hidden="true">↗</span></button>
-              </aside>
-            )}
+            {assistantContext && <AssistantPanel userId={userId} context={assistantContext} onApprove={() => {if(currentPlan){setApprovedPlan(currentPlan);setView('plan')}}} />}
           </div>
 
           {view === 'plan' && currentPlan && (
