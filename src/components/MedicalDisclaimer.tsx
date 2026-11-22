@@ -10,25 +10,12 @@ export const MedicalDisclaimer: React.FC<MedicalDisclaimerProps> = ({ compact = 
     <div
       role="region"
       aria-label="Important Health & Safety Disclaimer"
-      style={{
-        backgroundColor: 'var(--color-warning-bg)',
-        border: '1px solid var(--color-warning-border)',
-        borderRadius: 'var(--radius-md)',
-        padding: compact ? '10px 14px' : '14px 18px',
-        color: 'var(--color-warning-text)',
-        fontSize: compact ? '0.82rem' : '0.88rem',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '12px',
-        lineHeight: 1.45,
-      }}
+      className={`medical-note${compact ? ' medical-note-compact' : ''}`}
     >
-      <span aria-hidden="true" style={{ fontSize: '1.25rem', flexShrink: 0, marginTop: '-1px' }}>
-        ⚠️
-      </span>
+      <span className="medical-note-icon" aria-hidden="true">i</span>
       <div>
-        <strong style={{ display: 'block', marginBottom: '2px', color: '#78350f' }}>
-          Non-Medical Health Advisory
+        <strong>
+          A note for your wellbeing
         </strong>
         <span>{MEDICAL_DISCLAIMER}</span>
       </div>
